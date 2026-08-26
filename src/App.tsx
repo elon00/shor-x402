@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Header } from './components/Header';
 import { AgentCommandHub } from './components/AgentCommandHub';
+import { GodModeOnChainHub } from './components/GodModeOnChainHub';
 import { ConwayAutomatonView } from './components/ConwayAutomatonView';
 import { QuboSolverView } from './components/QuboSolverView';
 import { AlgorandExplorerView } from './components/AlgorandExplorerView';
@@ -546,20 +547,41 @@ export default function App() {
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {activeTab === 'agent-hub' && (
-          <AgentCommandHub
-            currentPlan={currentPlan}
-            isRunning={isRunning}
-            agentState={agentState}
-            logs={logs}
-            onStartExecution={runAutonomousWorkflow}
-            wallet={wallet}
-            policy={policy}
-            weights={weights}
-            services={services}
-            pendingApproval={pendingApproval}
-            onApproveStep={handleApproveStep}
-            onSelectTx={handleSelectTx}
-          />
+          <div className="space-y-6">
+            <GodModeOnChainHub
+              wallet={wallet}
+              pqcKey={pqcKey}
+              onTxCreated={(tx) => {
+                setTransactions((prev) => [tx, ...prev]);
+                addLog('S6_PAY', `On-Chain Action: ${tx.serviceName} (${tx.txId.substring(0, 16)}...)`, 'algo');
+              }}
+              onRefreshWallet={() => {
+                fetchLiveAccountHolding(wallet.address, wallet.network).then((info) => {
+                  if (info) {
+                    setWallet((w) => ({
+                      ...w,
+                      algoBalance: info.algoBalance,
+                      usdcBalance: info.hasUsdcOptIn ? info.usdcBalance : w.usdcBalance,
+                    }));
+                  }
+                });
+              }}
+            />
+            <AgentCommandHub
+              currentPlan={currentPlan}
+              isRunning={isRunning}
+              agentState={agentState}
+              logs={logs}
+              onStartExecution={runAutonomousWorkflow}
+              wallet={wallet}
+              policy={policy}
+              weights={weights}
+              services={services}
+              pendingApproval={pendingApproval}
+              onApproveStep={handleApproveStep}
+              onSelectTx={handleSelectTx}
+            />
+          </div>
         )}
 
         {activeTab === 'conway-engine' && (
