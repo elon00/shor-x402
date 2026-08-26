@@ -63,6 +63,31 @@ export async function fetchLiveAlgodStatus(network: NetworkMode): Promise<AlgodN
   }
 }
 
+export async function fetchLiveAccountHolding(address: string, network: NetworkMode = 'algorand-mainnet'): Promise<AccountHolding | null> {
+  const baseUrl = network === 'algorand-mainnet' ? MAINNET_ALGOD_URL : TESTNET_ALGOD_URL;
+  try {
+    const res = await fetch(`${baseUrl}/v2/accounts/${address}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const algoBalance = (data.amount || 0) / 1000000;
+    const usdcAssetId = network === 'algorand-mainnet' ? 31566704 : 10458941;
+    const usdcAsset = (data.assets || []).find((a: any) => a['asset-id'] === usdcAssetId);
+    const usdcBalance = usdcAsset ? (usdcAsset.amount || 0) / 1000000 : 0;
+    const hasUsdcOptIn = !!usdcAsset;
+
+    return {
+      address,
+      algoMicroAlgos: data.amount || 0,
+      algoBalance,
+      usdcBalance,
+      hasUsdcOptIn,
+      round: data.round || 64447633,
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
 export function getExplorerTxUrl(txId: string, network: NetworkMode): string {
   if (network === 'algorand-mainnet') {
     return `https://allo.info/tx/${txId}`;

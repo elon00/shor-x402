@@ -30,7 +30,7 @@ import { INITIAL_SERVICES } from './data/serviceRegistry';
 import { generatePqcKeyPair } from './utils/pqcCrypto';
 import { solveServiceSelection } from './utils/quboSolver';
 import { executeX402ServiceRequest } from './services/apiClient';
-import { fetchLiveAlgodStatus } from './services/algorandClient';
+import { fetchLiveAlgodStatus, fetchLiveAccountHolding } from './services/algorandClient';
 import {
   connectLuteOrAlgorandWallet,
   DEFAULT_ALGORAND_ADDRESSES,
@@ -47,7 +47,7 @@ export default function App() {
   // Post-Quantum Keypair
   const [pqcKey, setPqcKey] = useState<PqcKeyPair>(() => generatePqcKeyPair('ML-DSA-65'));
 
-  // Algorand Wallet
+  // Algorand Wallet (Strict MainNet Default)
   const [wallet, setWallet] = useState<WalletState>(() => {
     const savedLute = getSavedLutePublicKey();
     return {
@@ -62,7 +62,40 @@ export default function App() {
   });
 
   // Algorand Network & Round
-  const [activeRound, setActiveRound] = useState<number>(42891042);
+  const [activeRound, setActiveRound] = useState<number>(64447633);
+
+  // Live Algorand MainNet Poller (Round & On-Chain Balance Sync)
+  useEffect(() => {
+    let isMounted = true;
+    const syncMainNetState = async () => {
+      try {
+        const [nodeStatus, accountInfo] = await Promise.all([
+          fetchLiveAlgodStatus(wallet.network),
+          fetchLiveAccountHolding(wallet.address, wallet.network),
+        ]);
+        if (!isMounted) return;
+        if (nodeStatus && nodeStatus.lastRound) {
+          setActiveRound(nodeStatus.lastRound);
+        }
+        if (accountInfo && accountInfo.algoBalance > 0) {
+          setWallet((w) => ({
+            ...w,
+            algoBalance: accountInfo.algoBalance,
+            usdcBalance: accountInfo.hasUsdcOptIn ? accountInfo.usdcBalance : w.usdcBalance,
+          }));
+        }
+      } catch (e) {
+        // Silent fallback
+      }
+    };
+
+    syncMainNetState();
+    const interval = setInterval(syncMainNetState, 8000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [wallet.address, wallet.network]);
   const [isNodeLive, setIsNodeLive] = useState<boolean>(false);
 
   useEffect(() => {
