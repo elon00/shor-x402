@@ -1,11 +1,11 @@
-# SHOR x402 — Post-Quantum Autonomous Agent Commerce on Algorand
+ï»¿# SHOR x402 ï¿½ Post-Quantum Autonomous Agent Commerce on Algorand
 
 [![Algorand](https://img.shields.io/badge/Algorand-MainNet%20%2F%20TestNet-00D2C4?logo=algorand&logoColor=white)](https://algorand.co)
 [![PQC NIST Standard](https://img.shields.io/badge/PQC-FIPS%20203%20%26%20204%20(ML--DSA%20%2F%20ML--KEM)-7C3AED)](https://csrc.nist.gov/pubs/fips/204/final)
 [![Protocol](https://img.shields.io/badge/HTTP%20Status-402%20Payment%20Required-F59E0B)](https://x402.org)
 [![Intelligence](https://img.shields.io/badge/Intelligence-Gemini%203.7%20Flash%20%2B%20Aether%20AI-4285F4?logo=google&logoColor=white)](https://aistudio.google.com)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Deploy with Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start)
+[![Deploy with Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/elon00/shor-x402)
 
 > **SHOR x402** is a quantum-resilient, autonomous economic protocol and agent commerce command hub built natively on the **Algorand Blockchain**. It unifies **Hierarchical AI Task Planning (Gemini / Aether AI)**, **11-State Conway Cellular Automaton State Transitions**, **QUBO/QAOA Combinatorial Service Optimization**, **Wire-Level HTTP 402 Machine-to-Machine Settlements**, and **NIST FIPS 203/204 Post-Quantum Cryptography (ML-DSA-65 & ML-KEM-768)** into a production-grade Web 4.0 operating platform.
 
@@ -47,7 +47,7 @@ flowchart TD
     end
 
     subgraph OptLayer["4. Combinatorial Optimization"]
-        QUBO["QUBO Hamiltonian Formulation\nH(x) = aC + ßL + ?R + dQ + ?P"]
+        QUBO["QUBO Hamiltonian Formulation\nH(x) = aC + ï¿½L + ?R + dQ + ?P"]
         Ansatz["Solvers: Simulated Annealing vs\nQAOA Variational vs Greedy Heuristics"]
     end
 
@@ -147,28 +147,28 @@ Where $p_{\text{live}} = \frac{N_{\text{active}}}{N_{\text{total\_cells}}}$ is t
 
 ```
 [Agent Client]                                       [x402 Paid Service]          [x402 Facilitator]
-      ¦                                                      ¦                             ¦
-      ¦ --- 1. GET /api/services/weather ------------------> ¦                             ¦
-      ¦                                                      ¦                             ¦
-      ¦ <-- 2. HTTP 402 Payment Required ------------------- ¦                             ¦
-      ¦        WWW-Authenticate: x402 realm="shor"           ¦                             ¦
-      ¦        X-402-Cost-USDC: 0.002                        ¦                             ¦
-      ¦        X-402-Recipient: WEATHR7Q...                  ¦                             ¦
-      ¦        X-402-Nonce: x402_nonce_8f3a92b               ¦                             ¦
-      ¦        X-402-PQC-Standard: FIPS-204-ML-DSA-65        ¦                             ¦
-      ¦                                                      ¦                             ¦
-      ¦ --- 3. Post-Quantum Hybrid Sign (ML-DSA-65) -------- ¦ ----------- [Algorand Ledger]
-      ¦        Broadcast Micro-payment on Algorand           ¦                             ¦
-      ¦                                                                                    ¦
-      ¦ --- 4. POST /api/x402/verify-payment (txId, nonce) ------------------------------> ¦
-      ¦ <-- 5. Signed Settlement Proof Token --------------------------------------------- ¦
-      ¦                                                      ¦                             ¦
-      ¦ --- 6. GET /api/services/weather ------------------> ¦                             ¦
-      ¦        Authorization: x402-algo <proof_token>        ¦                             ¦
-      ¦        X-Algorand-TxId: <tx_id>                      ¦                             ¦
-      ¦        X-PQC-Signature: <ml_dsa_sig>                 ¦                             ¦
-      ¦                                                      ¦                             ¦
-      ¦ <-- 7. HTTP 200 OK + Verified JSON Payload --------- ¦                             ¦
+      ï¿½                                                      ï¿½                             ï¿½
+      ï¿½ --- 1. GET /api/services/weather ------------------> ï¿½                             ï¿½
+      ï¿½                                                      ï¿½                             ï¿½
+      ï¿½ <-- 2. HTTP 402 Payment Required ------------------- ï¿½                             ï¿½
+      ï¿½        WWW-Authenticate: x402 realm="shor"           ï¿½                             ï¿½
+      ï¿½        X-402-Cost-USDC: 0.002                        ï¿½                             ï¿½
+      ï¿½        X-402-Recipient: WEATHR7Q...                  ï¿½                             ï¿½
+      ï¿½        X-402-Nonce: x402_nonce_8f3a92b               ï¿½                             ï¿½
+      ï¿½        X-402-PQC-Standard: FIPS-204-ML-DSA-65        ï¿½                             ï¿½
+      ï¿½                                                      ï¿½                             ï¿½
+      ï¿½ --- 3. Post-Quantum Hybrid Sign (ML-DSA-65) -------- ï¿½ ----------- [Algorand Ledger]
+      ï¿½        Broadcast Micro-payment on Algorand           ï¿½                             ï¿½
+      ï¿½                                                                                    ï¿½
+      ï¿½ --- 4. POST /api/x402/verify-payment (txId, nonce) ------------------------------> ï¿½
+      ï¿½ <-- 5. Signed Settlement Proof Token --------------------------------------------- ï¿½
+      ï¿½                                                      ï¿½                             ï¿½
+      ï¿½ --- 6. GET /api/services/weather ------------------> ï¿½                             ï¿½
+      ï¿½        Authorization: x402-algo <proof_token>        ï¿½                             ï¿½
+      ï¿½        X-Algorand-TxId: <tx_id>                      ï¿½                             ï¿½
+      ï¿½        X-PQC-Signature: <ml_dsa_sig>                 ï¿½                             ï¿½
+      ï¿½                                                      ï¿½                             ï¿½
+      ï¿½ <-- 7. HTTP 200 OK + Verified JSON Payload --------- ï¿½                             ï¿½
 ```
 
 ---
@@ -281,35 +281,35 @@ SHOR x402 supports zero-configuration connectivity via free public **AlgoNode** 
 ```
 shor-x402/
 +-- .github/
-¦   +-- workflows/
-¦       +-- ci.yml                    # CI Lint, Typecheck & Build Matrix
-¦       +-- deploy.yml                # Automated Netlify Production Deploy
-¦       +-- algorand-validation.yml   # Algorand Node & Security Check
+ï¿½   +-- workflows/
+ï¿½       +-- ci.yml                    # CI Lint, Typecheck & Build Matrix
+ï¿½       +-- deploy.yml                # Automated Netlify Production Deploy
+ï¿½       +-- algorand-validation.yml   # Algorand Node & Security Check
 +-- netlify/
-¦   +-- functions/
-¦       +-- api.ts                    # Netlify Serverless API & x402 Handler
+ï¿½   +-- functions/
+ï¿½       +-- api.ts                    # Netlify Serverless API & x402 Handler
 +-- src/
-¦   +-- components/
-¦   ¦   +-- AgentCommandHub.tsx       # AI Dispatcher & Live Plan Execution
-¦   ¦   +-- AlgorandExplorerView.tsx  # On-Chain Ledger & HTTP 402 Packet Trace
-¦   ¦   +-- ConwayAutomatonView.tsx   # 11-State Cellular Automaton & Entropy
-¦   ¦   +-- GovernanceView.tsx        # Policy Engine & Circuit Breaker
-¦   ¦   +-- Header.tsx                # Wallet, PQC Key & Network Bar
-¦   ¦   +-- PqcSecurityView.tsx       # NIST FIPS 203/204 Vault & Benchmark
-¦   ¦   +-- QuboSolverView.tsx        # Hamiltonian Matrix & Solver Visualizer
-¦   ¦   +-- ServiceMarketplaceView.tsx# Service Catalog & Sandbox Tester
-¦   +-- data/
-¦   ¦   +-- serviceRegistry.ts        # Pre-seeded x402 Services Catalog
-¦   +-- services/
-¦   ¦   +-- algorandClient.ts         # Live Algod Node Status & Explorer
-¦   ¦   +-- apiClient.ts              # Client x402 Negotiation & Packet Logger
-¦   +-- utils/
-¦   ¦   +-- conwayEngine.ts           # 2D Grid Engine, Step & Entropy
-¦   ¦   +-- pqcCrypto.ts              # ML-DSA-65 & ML-KEM-768 Generator/Signer
-¦   ¦   +-- quboSolver.ts             # QUBO Matrix & Annealing Solver
-¦   +-- App.tsx                       # Main Application State & Coordinator
-¦   +-- main.tsx                      # React 19 Root Entrypoint
-¦   +-- types.ts                      # Protocol Types & Interface Definitions
+ï¿½   +-- components/
+ï¿½   ï¿½   +-- AgentCommandHub.tsx       # AI Dispatcher & Live Plan Execution
+ï¿½   ï¿½   +-- AlgorandExplorerView.tsx  # On-Chain Ledger & HTTP 402 Packet Trace
+ï¿½   ï¿½   +-- ConwayAutomatonView.tsx   # 11-State Cellular Automaton & Entropy
+ï¿½   ï¿½   +-- GovernanceView.tsx        # Policy Engine & Circuit Breaker
+ï¿½   ï¿½   +-- Header.tsx                # Wallet, PQC Key & Network Bar
+ï¿½   ï¿½   +-- PqcSecurityView.tsx       # NIST FIPS 203/204 Vault & Benchmark
+ï¿½   ï¿½   +-- QuboSolverView.tsx        # Hamiltonian Matrix & Solver Visualizer
+ï¿½   ï¿½   +-- ServiceMarketplaceView.tsx# Service Catalog & Sandbox Tester
+ï¿½   +-- data/
+ï¿½   ï¿½   +-- serviceRegistry.ts        # Pre-seeded x402 Services Catalog
+ï¿½   +-- services/
+ï¿½   ï¿½   +-- algorandClient.ts         # Live Algod Node Status & Explorer
+ï¿½   ï¿½   +-- apiClient.ts              # Client x402 Negotiation & Packet Logger
+ï¿½   +-- utils/
+ï¿½   ï¿½   +-- conwayEngine.ts           # 2D Grid Engine, Step & Entropy
+ï¿½   ï¿½   +-- pqcCrypto.ts              # ML-DSA-65 & ML-KEM-768 Generator/Signer
+ï¿½   ï¿½   +-- quboSolver.ts             # QUBO Matrix & Annealing Solver
+ï¿½   +-- App.tsx                       # Main Application State & Coordinator
+ï¿½   +-- main.tsx                      # React 19 Root Entrypoint
+ï¿½   +-- types.ts                      # Protocol Types & Interface Definitions
 +-- .env.example                      # Environment variables template
 +-- netlify.toml                      # Netlify Build & Serverless Routing Config
 +-- package.json                      # Dependencies & NPM Scripts
@@ -335,4 +335,4 @@ Distributed under the **Apache-2.0 License**. See `LICENSE` for more information
 
 ---
 
-**SHOR x402** — *Pioneering the Post-Quantum Autonomous Machine Economy on Algorand.*
+**SHOR x402** ï¿½ *Pioneering the Post-Quantum Autonomous Machine Economy on Algorand.*
