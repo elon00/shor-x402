@@ -1,7 +1,54 @@
 [build]
   command = "npm run build"
   publish = "dist"
+  functions = "netlify/functions"
 
+[functions]
+  node_bundler = "esbuild"
+
+# 1. Official Bazaar Machine Discovery Specification
+[[redirects]]
+  from = "/.well-known/x402-bazaar.json"
+  to = "/.netlify/functions/bazaar"
+  status = 200
+  force = true
+
+# 2. Primary Paid Orchestrator API (POST & GET)
+[[redirects]]
+  from = "/api/v1/shor/execute"
+  to = "/.netlify/functions/shor-execute"
+  status = 200
+  force = true
+
+# 3. Bazaar Discovery API
+[[redirects]]
+  from = "/api/v1/bazaar/discovery"
+  to = "/.netlify/functions/bazaar"
+  status = 200
+  force = true
+
+# 4. x402 GoPlausible Facilitator Settlement Verifier
+[[redirects]]
+  from = "/api/v1/x402/verify"
+  to = "/.netlify/functions/verify"
+  status = 200
+  force = true
+
+# 5. API Health Ping
+[[redirects]]
+  from = "/api/health"
+  to = "/.netlify/functions/health"
+  status = 200
+  force = true
+
+# 6. Fallback for any other API functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
+
+# 7. Frontend SPA Single-Page Routing
 [[redirects]]
   from = "/*"
   to = "/index.html"

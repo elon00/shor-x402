@@ -1,0 +1,78 @@
+{
+  "name": "SHOR x402 — Post-Quantum Autonomous Agent Commerce",
+  "version": "1.0.0",
+  "category": "ai-orchestrator",
+  "tags": [
+    "x402-global-challenge",
+    "algorand",
+    "post-quantum",
+    "qubo",
+    "orchestrator",
+    "usdc",
+    "fips-204"
+  ],
+  "provider": {
+    "name": "SHOR Labs / Martin Luther",
+    "website": "https://github.com/elon00/shor-x402",
+    "payTo": "TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM"
+  },
+  "primaryEndpoint": {
+    "path": "/api/v1/shor/execute",
+    "method": "POST",
+    "pricing": {
+      "costUsdc": 0.005,
+      "assetIdMainnet": 31566704,
+      "assetIdTestnet": 10458941
+    },
+    "caip2": {
+      "mainnet": "algorand:wGHE2pwdvd7S12BL5Fa+PRx3TF3QXDYODnakNVUtvpU=",
+      "testnet": "algorand:SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="
+    },
+    "facilitator": "https://x402.goplausible.xyz",
+    "pqcSpecification": "NIST FIPS 204 (ML-DSA-65) & FIPS 203 (ML-KEM-768)"
+  },
+  "endpoints": [
+    {
+      "name": "SHOR Autonomous Agent Orchestrator",
+      "path": "/api/v1/shor/execute",
+      "method": "POST",
+      "costUsdc": 0.005,
+      "description": "Autonomous task planning, QUBO service optimization, and x402 USDC micro-settlement pipeline."
+    },
+    {
+      "name": "Planetary Radar & Hyperlocal Weather API",
+      "path": "/api/services/weather",
+      "method": "GET",
+      "costUsdc": 0.002,
+      "description": "Doppler radar reflectivity and solar irradiance feed."
+    },
+    {
+      "name": "Quantum-Assisted Neural Inference Engine",
+      "path": "/api/services/quantum-inference",
+      "method": "GET",
+      "costUsdc": 0.015,
+      "description": "QUBO-parameterized variational quantum ansatz inference."
+    },
+    {
+      "name": "Distributed Orbital Compute & GIS Matrix Engine",
+      "path": "/api/services/satellite-compute",
+      "method": "GET",
+      "costUsdc": 0.05,
+      "description": "Sentinel-SAR radar interferogram compute."
+    },
+    {
+      "name": "Institutional Macro & Cross-Chain Liquidity Feed",
+      "path": "/api/services/market-depth",
+      "method": "GET",
+      "costUsdc": 0.008,
+      "description": "Real-time Algo/USDC DEX liquidity & volatility smile skew."
+    },
+    {
+      "name": "True Quantum Entropy Seed Generator",
+      "path": "/api/services/pqc-entropy",
+      "method": "GET",
+      "costUsdc": 0.001,
+      "description": "Photon shot-noise hardware entropy source."
+    }
+  ]
+}
