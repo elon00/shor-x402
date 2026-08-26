@@ -14,17 +14,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, '.'),
     },
   },
-  optimizeDeps: {
-    include: ['react', 'react-dom', 'react-is', 'recharts', 'lucide-react', 'clsx', 'motion'],
-  },
   build: {
     outDir: 'dist',
-    chunkSizeWarningLimit: 2500,
-    sourcemap: false,
-    commonjsOptions: {
-      include: [/node_modules/],
-      transformMixedEsModules: true,
-    },
+    chunkSizeWarningLimit: 3000,
   },
   server: {
     port: 3000,
