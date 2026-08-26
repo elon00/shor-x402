@@ -30,21 +30,13 @@ import { INITIAL_SERVICES } from './data/serviceRegistry';
 import { generatePqcKeyPair } from './utils/pqcCrypto';
 import { solveServiceSelection } from './utils/quboSolver';
 import { executeX402ServiceRequest } from './services/apiClient';
+import { fetchLiveAlgodStatus } from './services/algorandClient';
 
 export default function App() {
   // Navigation
   const [activeTab, setActiveTab] = useState<string>('agent-hub');
   const [isDocsOpen, setIsDocsOpen] = useState<boolean>(false);
   const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
-
-  // Algorand Network & Round
-  const [activeRound, setActiveRound] = useState<number>(42891042);
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveRound((r) => r + 1);
-    }, 3500); // ~3.5s per Algorand block round
-    return () => clearInterval(interval);
-  }, []);
 
   // Post-Quantum Keypair
   const [pqcKey, setPqcKey] = useState<PqcKeyPair>(() => generatePqcKeyPair('ML-DSA-65'));
@@ -58,6 +50,34 @@ export default function App() {
     network: 'algorand-mainnet',
     pqcKeyId: pqcKey.keyId,
   });
+
+  // Algorand Network & Round
+  const [activeRound, setActiveRound] = useState<number>(42891042);
+  const [isNodeLive, setIsNodeLive] = useState<boolean>(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const pollStatus = async () => {
+      try {
+        const status = await fetchLiveAlgodStatus(wallet.network);
+        if (isMounted) {
+          setActiveRound(status.lastRound);
+          setIsNodeLive(status.isLive);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setActiveRound((r) => r + 1);
+        }
+      }
+    };
+
+    pollStatus();
+    const interval = setInterval(pollStatus, 3500); // ~3.5s per Algorand block round
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [wallet.network]);
 
   // Services Catalog
   const [services, setServices] = useState<PaidService[]>(INITIAL_SERVICES);
