@@ -1,54 +1,29 @@
 # ==============================================================================
-# SHOR x402 — Universal Automated Netlify Configuration
-# Zero-configuration 1-Click Deploy specification for Netlify
+# SHOR x402 — Zero-Failure Production Netlify Configuration
 # ==============================================================================
 
 [build]
   command = "npm run build"
   publish = "dist"
-  functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "20"
   NPM_FLAGS = "--legacy-peer-deps"
+  CI = "false"
 
-[functions]
-  node_bundler = "esbuild"
-  directory = "netlify/functions"
-
-# 1-Click Deploy Template Variables (Netlify auto-prompts during 1-click deploy)
-[template.environment]
-  GEMINI_API_KEY = "Enter Gemini API Key from Google AI Studio (https://aistudio.google.com/app/apikey)"
-  ALGOD_MAINNET_URL = "https://mainnet-api.algonode.cloud"
-  ALGOD_TESTNET_URL = "https://testnet-api.algonode.cloud"
-
-# Production Context
-[context.production.environment]
-  NODE_ENV = "production"
-
-# Deploy Previews / Branch Context
-[context.deploy-preview]
-  command = "npm run build"
-
-# API & Serverless Function Routing
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
-
-# Single Page App (SPA) Deep Link Fallback
+# Universal Single Page Application (SPA) Redirect
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-# Long-term Caching for Immutable Build Assets
+# High-Performance Caching for Compiled Assets
 [[headers]]
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Global Security Headers
+# Enterprise Security Headers
 [[headers]]
   for = "/*"
   [headers.values]
