@@ -32,8 +32,9 @@ import { solveServiceSelection } from './utils/quboSolver';
 import { executeX402ServiceRequest } from './services/apiClient';
 import { fetchLiveAlgodStatus } from './services/algorandClient';
 import {
-  connectPhantomOrInjectedWallet,
-  OFFICIAL_ALGORAND_ACCOUNTS,
+  connectLuteOrAlgorandWallet,
+  DEFAULT_ALGORAND_ADDRESSES,
+  getSavedLutePublicKey,
 } from './services/walletConnector';
 
 export default function App() {
@@ -41,19 +42,23 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>('agent-hub');
   const [isDocsOpen, setIsDocsOpen] = useState<boolean>(false);
   const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
-  const [walletProviderName, setWalletProviderName] = useState<string>('Phantom / Algorand');
+  const [walletProviderName, setWalletProviderName] = useState<string>('Lute Wallet');
 
   // Post-Quantum Keypair
   const [pqcKey, setPqcKey] = useState<PqcKeyPair>(() => generatePqcKeyPair('ML-DSA-65'));
 
   // Algorand Wallet
-  const [wallet, setWallet] = useState<WalletState>({
-    address: 'SHOR7AGENT999ALGORANDUSDC777AAA888BBBCCC31566704PQC999',
-    mnemonicSeedPreview: 'quantum orbit lattice cipher algorand agent proof verify...',
-    algoBalance: 12.5,
-    usdcBalance: 1.25,
-    network: 'algorand-mainnet',
-    pqcKeyId: pqcKey.keyId,
+  const [wallet, setWallet] = useState<WalletState>(() => {
+    const savedLute = getSavedLutePublicKey();
+    return {
+      address: savedLute || DEFAULT_ALGORAND_ADDRESSES.mainnet,
+      algoBalance: savedLute ? 25.0 : 12.5,
+      usdcBalance: savedLute ? 5.0 : 1.25,
+      network: 'algorand-mainnet',
+      pqcKeyId: pqcKey.keyId,
+      providerName: 'Lute Wallet',
+      isCustomLuteKey: !!savedLute,
+    };
   });
 
   // Algorand Network & Round
@@ -170,18 +175,31 @@ export default function App() {
 
   const handleConnectWallet = async () => {
     try {
-      const info = await connectPhantomOrInjectedWallet(wallet.network);
+      const info = await connectLuteOrAlgorandWallet(wallet.network);
       setWallet((w) => ({
         ...w,
         address: info.address,
         algoBalance: info.algoBalance,
         usdcBalance: info.usdcBalance,
+        providerName: info.providerName,
+        isCustomLuteKey: info.isCustomKey,
       }));
       setWalletProviderName(info.providerName);
-      addLog('S0_IDLE', `Connected 1-Click Wallet: ${info.providerName} (${info.address.substring(0, 8)}... on ${wallet.network}).`, 'algo');
+      addLog('S0_IDLE', `Connected: ${info.providerName} (${info.address.substring(0, 8)}... on ${wallet.network}).`, 'algo');
     } catch (e: any) {
       addLog('S0_IDLE', `Wallet connection status: ${e.message}`, 'info');
     }
+  };
+
+  const handleUpdateCustomAddress = (newAddress: string) => {
+    setWallet((w) => ({
+      ...w,
+      address: newAddress,
+      isCustomLuteKey: true,
+      providerName: 'Lute Wallet',
+    }));
+    setWalletProviderName('Lute Wallet');
+    addLog('S0_IDLE', `Lute Wallet Public Key updated to ${newAddress.substring(0, 8)}...`, 'success');
   };
 
   const handleFaucetClaim = () => {
@@ -194,13 +212,18 @@ export default function App() {
   };
 
   const handleNetworkChange = (net: NetworkMode) => {
-    const acc = net === 'algorand-mainnet' ? OFFICIAL_ALGORAND_ACCOUNTS.mainnet : OFFICIAL_ALGORAND_ACCOUNTS.testnet;
-    setWallet((w) => ({
-      ...w,
-      network: net,
-      address: acc.address,
-    }));
-    addLog('S0_IDLE', `Switched blockchain settlement target to ${net}. Active Address: ${acc.address.substring(0, 8)}...`, 'info');
+    setWallet((w) => {
+      const isCustom = w.isCustomLuteKey;
+      const newAddr = isCustom
+        ? w.address
+        : (net === 'algorand-mainnet' ? DEFAULT_ALGORAND_ADDRESSES.mainnet : DEFAULT_ALGORAND_ADDRESSES.testnet);
+      return {
+        ...w,
+        network: net,
+        address: newAddr,
+      };
+    });
+    addLog('S0_IDLE', `Switched blockchain settlement target to ${net}.`, 'info');
   };
 
   // Autonomous Execution Pipeline
@@ -468,6 +491,7 @@ export default function App() {
         onOpenDocs={() => setIsDocsOpen(true)}
         activeRound={activeRound}
         onConnectWallet={handleConnectWallet}
+        onUpdateCustomAddress={handleUpdateCustomAddress}
         walletProviderName={walletProviderName}
       />
 

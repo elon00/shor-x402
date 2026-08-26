@@ -18,9 +18,15 @@ import {
   ExternalLink,
   X,
   Sparkles,
+  Save,
+  RotateCcw,
 } from 'lucide-react';
 import { NetworkMode, WalletState, AgentStateId } from '../types';
-import { OFFICIAL_ALGORAND_ACCOUNTS } from '../services/walletConnector';
+import {
+  saveLutePublicKey,
+  clearSavedLutePublicKey,
+  isValidAlgorandAddress,
+} from '../services/walletConnector';
 
 interface HeaderProps {
   activeTab: string;
@@ -32,6 +38,7 @@ interface HeaderProps {
   onOpenDocs: () => void;
   activeRound: number;
   onConnectWallet?: () => void;
+  onUpdateCustomAddress?: (newAddress: string) => void;
   walletProviderName?: string;
 }
 
@@ -45,10 +52,14 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenDocs,
   activeRound,
   onConnectWallet,
-  walletProviderName = 'Phantom / Algorand',
+  onUpdateCustomAddress,
+  walletProviderName = 'Lute Wallet',
 }) => {
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [inputAddress, setInputAddress] = useState<string>('');
+  const [inputError, setInputError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
 
   const tabs = [
     { id: 'agent-hub', label: 'Agent Command Hub', icon: Terminal },
@@ -66,10 +77,35 @@ export const Header: React.FC<HeaderProps> = ({
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
-  const currentAccountInfo =
-    wallet.network === 'algorand-mainnet'
-      ? OFFICIAL_ALGORAND_ACCOUNTS.mainnet
-      : OFFICIAL_ALGORAND_ACCOUNTS.testnet;
+  const handleSaveCustomKey = () => {
+    setInputError(null);
+    const trimmed = inputAddress.trim().toUpperCase();
+    if (!trimmed) {
+      setInputError('Please enter an Algorand public address.');
+      return;
+    }
+    if (!isValidAlgorandAddress(trimmed)) {
+      setInputError('Invalid address: Algorand addresses must be exactly 58 Base32 characters (A-Z, 2-7).');
+      return;
+    }
+
+    saveLutePublicKey(trimmed);
+    if (onUpdateCustomAddress) {
+      onUpdateCustomAddress(trimmed);
+    }
+    setSaveSuccess(true);
+    setInputAddress('');
+    setTimeout(() => setSaveSuccess(false), 2500);
+  };
+
+  const handleResetToDefault = () => {
+    clearSavedLutePublicKey();
+    if (onConnectWallet) {
+      onConnectWallet();
+    }
+    setInputAddress('');
+    setInputError(null);
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 text-slate-100 shadow-lg">
@@ -120,17 +156,16 @@ export const Header: React.FC<HeaderProps> = ({
             <option value="algorand-devnet">Local DevNet</option>
           </select>
 
-          {/* 1-Click Phantom / Wallet Connect Button */}
+          {/* 1-Click Lute Wallet Button */}
           <button
-            onClick={() => {
-              if (onConnectWallet) onConnectWallet();
-              setIsWalletModalOpen(true);
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-purple-900/60 to-indigo-900/60 border border-purple-600/40 text-purple-200 hover:text-white hover:border-purple-500 transition-all font-mono text-xs shadow-sm cursor-pointer"
-            title="Auto Connect Phantom or View Algorand Public Address"
+            onClick={() => setIsWalletModalOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-emerald-950/80 via-teal-950/60 to-cyan-950/80 border border-teal-600/40 text-teal-200 hover:text-white hover:border-teal-400 transition-all font-mono text-xs shadow-sm cursor-pointer"
+            title="Manage Lute Wallet / Algorand Public Address"
           >
-            <Wallet className="w-3.5 h-3.5 text-purple-400" />
-            <span className="font-semibold">{wallet.address ? `${wallet.address.substring(0, 4)}...${wallet.address.substring(54)}` : 'Connect Wallet'}</span>
+            <Wallet className="w-3.5 h-3.5 text-teal-400" />
+            <span className="font-semibold">
+              {wallet.address ? `${wallet.address.substring(0, 5)}...${wallet.address.substring(53)}` : 'Connect Lute'}
+            </span>
           </button>
 
           {/* Wallet Balances & Faucet */}
@@ -189,23 +224,23 @@ export const Header: React.FC<HeaderProps> = ({
         </nav>
       </div>
 
-      {/* 1-Click Algorand & Phantom Wallet Modal */}
+      {/* Lute Wallet & Algorand Public Key Modal */}
       {isWalletModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-5 text-slate-100">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-5 text-slate-100 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-purple-950/60 border border-purple-700/50 text-purple-400">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-teal-950/80 border border-teal-700/50 text-teal-400">
                   <Wallet className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-slate-100 font-mono">Algorand & Phantom Wallet Hub</h3>
-                  <p className="text-xs text-slate-400">1-Click Auto Connect & Official Account Keys</p>
+                  <h3 className="font-bold text-base text-slate-100 font-mono">Lute Wallet & Algorand Hub</h3>
+                  <p className="text-xs text-slate-400">Connect Lute, Kibisis, Pera or Set Your Public Address</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsWalletModalOpen(false)}
-                className="text-slate-400 hover:text-slate-200 p-1 rounded-md hover:bg-slate-800 transition-colors"
+                className="text-slate-400 hover:text-slate-200 p-1 rounded-md hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -214,14 +249,14 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Provider & Network Status */}
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
-                <span className="text-[10px] text-slate-500 block font-mono">CONNECTED PROVIDER</span>
-                <span className="text-xs font-bold text-purple-300 font-mono flex items-center gap-1.5 mt-0.5">
-                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                <span className="text-[10px] text-slate-500 block font-mono">ACTIVE PROVIDER</span>
+                <span className="text-xs font-bold text-teal-300 font-mono flex items-center gap-1.5 mt-0.5">
+                  <Sparkles className="w-3.5 h-3.5 text-teal-400" />
                   {walletProviderName}
                 </span>
               </div>
               <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
-                <span className="text-[10px] text-slate-500 block font-mono">SETTLEMENT CHAIN</span>
+                <span className="text-[10px] text-slate-500 block font-mono">ACTIVE NETWORK</span>
                 <span className="text-xs font-bold text-emerald-400 font-mono flex items-center gap-1.5 mt-0.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-400" />
                   {wallet.network === 'algorand-mainnet' ? 'Algorand MainNet' : 'Algorand TestNet'}
@@ -229,16 +264,16 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
 
-            {/* Official Algorand Public Key / Address */}
+            {/* Active Algorand Public Key / Address */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400 font-mono font-medium">Algorand Public Address (58-char Base32):</span>
+                <span className="text-slate-400 font-mono font-medium">Active Algorand Public Address:</span>
                 <button
                   onClick={() => copyToClipboard(wallet.address, 'address')}
-                  className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 font-mono"
+                  className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 font-mono cursor-pointer"
                 >
                   {copiedKey === 'address' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copiedKey === 'address' ? 'Copied Address!' : 'Copy Address'}
+                  {copiedKey === 'address' ? 'Copied!' : 'Copy Address'}
                 </button>
               </div>
               <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 font-mono text-xs text-cyan-300 break-all select-all">
@@ -246,52 +281,83 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
 
-            {/* Official Algorand Mnemonic Seed Phrase */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400 font-mono font-medium">Algorand 25-Word Mnemonic Passphrase:</span>
-                <button
-                  onClick={() => copyToClipboard(currentAccountInfo.mnemonic, 'mnemonic')}
-                  className="flex items-center gap-1 text-[11px] text-indigo-400 hover:text-indigo-300 font-mono"
+            {/* Set / Paste Custom Lute Wallet Public Key */}
+            <div className="space-y-2 p-3.5 bg-slate-950/70 border border-slate-800/80 rounded-xl">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-mono font-semibold text-slate-200">
+                  Set Your Lute Wallet Public Key
+                </label>
+                <a
+                  href="https://lute.app"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[10px] text-teal-400 hover:underline flex items-center gap-0.5 font-mono"
                 >
-                  {copiedKey === 'mnemonic' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copiedKey === 'mnemonic' ? 'Copied Mnemonic!' : 'Copy 25-Word Seed'}
+                  Open lute.app <ExternalLink className="w-2.5 h-2.5" />
+                </a>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Paste your 58-character Algorand Public Key from Lute..."
+                  value={inputAddress}
+                  onChange={(e) => setInputAddress(e.target.value)}
+                  className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-teal-500"
+                />
+                <button
+                  onClick={handleSaveCustomKey}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-teal-600 hover:bg-teal-500 text-white font-mono text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  Save
                 </button>
               </div>
-              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 font-mono text-[11px] text-indigo-300 leading-relaxed break-words select-all">
-                {currentAccountInfo.mnemonic}
-              </div>
-              <p className="text-[10px] text-slate-500 leading-tight">
-                Use this seed to import this pre-configured account directly into your Phantom, Pera, or Defly Wallet.
-              </p>
+              {inputError && (
+                <p className="text-[11px] text-rose-400 font-mono">{inputError}</p>
+              )}
+              {saveSuccess && (
+                <p className="text-[11px] text-emerald-400 font-mono flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5" /> Lute Public Key saved and active!
+                </p>
+              )}
             </div>
 
-            {/* Quick Actions */}
+            {/* Actions & Links */}
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
-              <a
-                href={wallet.network === 'algorand-mainnet' ? `https://allo.info/account/${wallet.address}` : `https://testnet.allo.info/account/${wallet.address}`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1 text-xs text-slate-400 hover:text-cyan-300 font-mono"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                View on Allo Explorer
-              </a>
+              <div className="flex items-center gap-3">
+                <a
+                  href={wallet.network === 'algorand-mainnet' ? `https://allo.info/account/${wallet.address}` : `https://testnet.allo.info/account/${wallet.address}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1 text-xs text-slate-400 hover:text-cyan-300 font-mono"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Allo Explorer
+                </a>
+                <button
+                  onClick={handleResetToDefault}
+                  className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 font-mono cursor-pointer"
+                  title="Reset to default address"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  Reset
+                </button>
+              </div>
 
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
                     if (onConnectWallet) onConnectWallet();
                   }}
-                  className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs font-semibold transition-colors"
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-300 font-mono text-xs font-medium transition-colors cursor-pointer"
                 >
-                  Auto-Sync Phantom
+                  Auto-Detect Wallet
                 </button>
                 <button
                   onClick={() => setIsWalletModalOpen(false)}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs transition-colors"
+                  className="px-3.5 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-500 text-white font-mono text-xs font-semibold transition-colors cursor-pointer"
                 >
-                  Close
+                  Done
                 </button>
               </div>
             </div>

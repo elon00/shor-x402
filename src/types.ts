@@ -156,9 +156,10 @@ export interface PqcKeyPair {
 
 export interface WalletState {
   address: string;
-  mnemonicSeedPreview: string;
   algoBalance: number;
   usdcBalance: number;
   network: NetworkMode;
   pqcKeyId: string;
+  providerName?: string;
+  isCustomLuteKey?: boolean;
 }
