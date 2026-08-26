@@ -1,5 +1,5 @@
 # ==============================================================================
-# SHOR x402 — Bulletproof Production Netlify Configuration
+# SHOR x402 — Production Netlify Configuration
 # ==============================================================================
 
 [build]
@@ -11,23 +11,26 @@
   NPM_FLAGS = "--legacy-peer-deps"
   CI = "false"
 
-# Universal Single Page Application (SPA) Deep Link Redirect
+[build.processing]
+  skip_processing = true
+
+# Single Page Application (SPA) Fallback
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-# High-Performance Caching for Compiled Assets
+# High-Performance Caching
 [[headers]]
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Enterprise Security Headers
+# Security & Preview Compatible Headers
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "DENY"
+    X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
