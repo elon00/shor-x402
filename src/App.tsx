@@ -31,12 +31,17 @@ import { generatePqcKeyPair } from './utils/pqcCrypto';
 import { solveServiceSelection } from './utils/quboSolver';
 import { executeX402ServiceRequest } from './services/apiClient';
 import { fetchLiveAlgodStatus } from './services/algorandClient';
+import {
+  connectPhantomOrInjectedWallet,
+  OFFICIAL_ALGORAND_ACCOUNTS,
+} from './services/walletConnector';
 
 export default function App() {
   // Navigation
   const [activeTab, setActiveTab] = useState<string>('agent-hub');
   const [isDocsOpen, setIsDocsOpen] = useState<boolean>(false);
   const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
+  const [walletProviderName, setWalletProviderName] = useState<string>('Phantom / Algorand');
 
   // Post-Quantum Keypair
   const [pqcKey, setPqcKey] = useState<PqcKeyPair>(() => generatePqcKeyPair('ML-DSA-65'));
@@ -163,6 +168,22 @@ export default function App() {
     ]);
   };
 
+  const handleConnectWallet = async () => {
+    try {
+      const info = await connectPhantomOrInjectedWallet(wallet.network);
+      setWallet((w) => ({
+        ...w,
+        address: info.address,
+        algoBalance: info.algoBalance,
+        usdcBalance: info.usdcBalance,
+      }));
+      setWalletProviderName(info.providerName);
+      addLog('S0_IDLE', `Connected 1-Click Wallet: ${info.providerName} (${info.address.substring(0, 8)}... on ${wallet.network}).`, 'algo');
+    } catch (e: any) {
+      addLog('S0_IDLE', `Wallet connection status: ${e.message}`, 'info');
+    }
+  };
+
   const handleFaucetClaim = () => {
     setWallet((w) => ({
       ...w,
@@ -173,8 +194,13 @@ export default function App() {
   };
 
   const handleNetworkChange = (net: NetworkMode) => {
-    setWallet((w) => ({ ...w, network: net }));
-    addLog('S0_IDLE', `Switched active blockchain settlement target to ${net}.`, 'info');
+    const acc = net === 'algorand-mainnet' ? OFFICIAL_ALGORAND_ACCOUNTS.mainnet : OFFICIAL_ALGORAND_ACCOUNTS.testnet;
+    setWallet((w) => ({
+      ...w,
+      network: net,
+      address: acc.address,
+    }));
+    addLog('S0_IDLE', `Switched blockchain settlement target to ${net}. Active Address: ${acc.address.substring(0, 8)}...`, 'info');
   };
 
   // Autonomous Execution Pipeline
@@ -441,6 +467,8 @@ export default function App() {
         currentAgentState={agentState}
         onOpenDocs={() => setIsDocsOpen(true)}
         activeRound={activeRound}
+        onConnectWallet={handleConnectWallet}
+        walletProviderName={walletProviderName}
       />
 
       {/* Main Content Area */}
