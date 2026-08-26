@@ -1,0 +1,7 @@
+{
+  "name": "SHOR x402 — Post-Quantum Autonomous Agent Commerce",
+  "description": "A post-quantum Web 4.0 agent economy where AI agents discover, optimize, pay for, execute, and verify digital services through x402 on Algorand.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
