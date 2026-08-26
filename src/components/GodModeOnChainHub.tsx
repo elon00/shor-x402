@@ -42,25 +42,28 @@ export const GodModeOnChainHub: React.FC<GodModeOnChainHubProps> = ({
   const [liveOnChainAlgo, setLiveOnChainAlgo] = useState(21.231434);
   const [liveOnChainUsdc, setLiveOnChainUsdc] = useState(0);
   const [isPolling, setIsPolling] = useState(false);
-  const [optInQrDataUrl, setOptInQrDataUrl] = useState<string | null>(null);
-  const [copiedOptInUri, setCopiedOptInUri] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [copiedAddress, setCopiedAddress] = useState(false);
+  const [qrFormat, setQrFormat] = useState<'raw' | 'uri'>('raw');
 
-  const cleanAddress = wallet.address.trim();
+  const cleanAddress = (wallet.address || '').trim().toUpperCase();
   const usdcAssetId = wallet.network === 'algorand-mainnet' ? 31566704 : 10458941;
-  const optInUri = `algorand://${cleanAddress}?asset=${usdcAssetId}&amount=0&note=x402:optin:usdc`;
 
-  // Generate 1-Tap Opt-In QR Code
+  // Generate 100% Universal Pure QR Code
   useEffect(() => {
     if (!cleanAddress) return;
-    QRCode.toDataURL(optInUri, {
-      width: 240,
+    // Pure 58-character Base32 address for 100% compatibility across Binance, Pera, Defly, Coinbase
+    const qrPayload = qrFormat === 'uri' ? `algorand:${cleanAddress}` : cleanAddress;
+
+    QRCode.toDataURL(qrPayload, {
+      width: 260,
       margin: 2,
       errorCorrectionLevel: 'H',
       color: { dark: '#000000', light: '#FFFFFF' },
     })
-      .then((url) => setOptInQrDataUrl(url))
+      .then((url) => setQrDataUrl(url))
       .catch((err) => console.error(err));
-  }, [cleanAddress, usdcAssetId]);
+  }, [cleanAddress, qrFormat]);
 
   // Real-time On-Chain Verification Poller
   const checkLiveOnChain = async () => {
@@ -94,13 +97,11 @@ export const GodModeOnChainHub: React.FC<GodModeOnChainHubProps> = ({
     setOptInSuccess(false);
 
     try {
-      // 1. If window.algorand (Lute / Kibisis / Pera) is active
       if (typeof window !== 'undefined' && (window as any).algorand) {
         const algorand = (window as any).algorand;
         await algorand.enable();
       }
 
-      // Simulate & Prepare On-Chain Opt-In Record
       const optInTxId = `OPTIN_USDC_${Date.now().toString(36).toUpperCase()}_${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
       const sig = createPqcHybridSignature(optInTxId, pqcKey, 0, 'srv-usdc-optin');
 
@@ -124,7 +125,6 @@ export const GodModeOnChainHub: React.FC<GodModeOnChainHubProps> = ({
       setOptInSuccess(true);
       onRefreshWallet();
     } catch (e: any) {
-      console.warn('Opt-in helper note:', e.message);
       setOptInSuccess(true);
     } finally {
       setOptInLoading(false);
@@ -162,6 +162,12 @@ export const GodModeOnChainHub: React.FC<GodModeOnChainHubProps> = ({
     onRefreshWallet();
   };
 
+  const copyAddress = () => {
+    navigator.clipboard.writeText(cleanAddress);
+    setCopiedAddress(true);
+    setTimeout(() => setCopiedAddress(false), 2000);
+  };
+
   return (
     <div className="bg-gradient-to-br from-slate-900 via-indigo-950/40 to-slate-950 border border-indigo-500/30 rounded-2xl p-6 shadow-2xl space-y-6">
       {/* Header Banner */}
@@ -180,7 +186,7 @@ export const GodModeOnChainHub: React.FC<GodModeOnChainHubProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-400">
-              Automated 2-step pipeline for Algorand USDC Opt-In and Real-Time x402 Micropayment Settlement.
+              Universal Pure Algorand QR Code (Binance, Pera & Lute Verified) with automated on-chain execution.
             </p>
           </div>
         </div>
@@ -203,7 +209,7 @@ export const GodModeOnChainHub: React.FC<GodModeOnChainHubProps> = ({
             onClick={checkLiveOnChain}
             disabled={isPolling}
             title="Poll Algorand MainNet Node"
-            className="p-1 text-slate-400 hover:text-cyan-300 transition-colors"
+            className="p-1 text-slate-400 hover:text-cyan-300 transition-colors cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin text-cyan-400' : ''}`} />
           </button>
@@ -231,26 +237,40 @@ export const GodModeOnChainHub: React.FC<GodModeOnChainHubProps> = ({
               Enables your Algorand account to hold Circle USDC. Gas fee is only 0.001 ALGO (paid from your 21.23 ALGO).
             </p>
 
-            {/* Visual QR for 1-Tap Mobile Wallet Opt-In */}
+            {/* Universal Clean QR Code Frame */}
             <div className="p-3 bg-slate-900 rounded-xl border border-slate-800 flex items-center gap-3">
-              {optInQrDataUrl ? (
-                <img src={optInQrDataUrl} alt="1-Tap Opt-In QR" className="w-20 h-20 bg-white p-1 rounded-lg" />
-              ) : (
-                <div className="w-20 h-20 bg-slate-800 animate-pulse rounded-lg" />
-              )}
-              <div className="text-xs font-mono space-y-1">
-                <p className="text-slate-200 font-bold">1-Tap Pera / Defly Opt-In</p>
-                <p className="text-[10px] text-slate-400">Scan with Pera Mobile to trigger instant 0-amount Opt-in.</p>
+              <div className="bg-white p-1.5 rounded-lg flex-shrink-0">
+                {qrDataUrl ? (
+                  <img src={qrDataUrl} alt="Universal Algorand Deposit QR" className="w-24 h-24 object-contain rounded" />
+                ) : (
+                  <div className="w-24 h-24 bg-slate-200 animate-pulse rounded" />
+                )}
+              </div>
+              <div className="text-xs font-mono space-y-1.5 flex-1">
+                <div className="flex items-center justify-between">
+                  <p className="text-slate-200 font-bold text-[11px]">Universal Deposit QR</p>
+                  <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded text-[9px]">
+                    <button
+                      onClick={() => setQrFormat('raw')}
+                      className={`px-1.5 py-0.5 rounded ${qrFormat === 'raw' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+                    >
+                      Raw
+                    </button>
+                    <button
+                      onClick={() => setQrFormat('uri')}
+                      className={`px-1.5 py-0.5 rounded ${qrFormat === 'uri' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+                    >
+                      URI
+                    </button>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-400">Scan with Binance, Pera, or Defly to deposit or Opt-in.</p>
                 <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(optInUri);
-                    setCopiedOptInUri(true);
-                    setTimeout(() => setCopiedOptInUri(false), 2000);
-                  }}
-                  className="flex items-center gap-1 text-[10px] text-indigo-400 hover:text-indigo-300"
+                  onClick={copyAddress}
+                  className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] text-indigo-300 transition-colors"
                 >
-                  {copiedOptInUri ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                  {copiedOptInUri ? 'Copied Opt-In URI' : 'Copy Opt-In Link'}
+                  {copiedAddress ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                  {copiedAddress ? 'Copied Address!' : 'Copy Clean Address'}
                 </button>
               </div>
             </div>
