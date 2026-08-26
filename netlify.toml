@@ -1,5 +1,5 @@
 # ==============================================================================
-# SHOR x402 — Zero-Failure Production Netlify Configuration
+# SHOR x402 — Bulletproof Production Netlify Configuration
 # ==============================================================================
 
 [build]
@@ -11,7 +11,7 @@
   NPM_FLAGS = "--legacy-peer-deps"
   CI = "false"
 
-# Universal Single Page Application (SPA) Redirect
+# Universal Single Page Application (SPA) Deep Link Redirect
 [[redirects]]
   from = "/*"
   to = "/index.html"

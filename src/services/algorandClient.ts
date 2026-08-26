@@ -2,6 +2,7 @@
  * Algorand Live Node & Indexer Client for SHOR x402
  * Connects to AlgoNode Free Public Infrastructure for MainNet and TestNet.
  */
+import { NetworkMode } from '../types';
 
 export interface AlgodNodeStatus {
   lastRound: number;
@@ -10,7 +11,7 @@ export interface AlgodNodeStatus {
   genesisId: string;
   genesisHash: string;
   isLive: boolean;
-  network: 'algorand-mainnet' | 'algorand-testnet' | 'local-sandbox';
+  network: NetworkMode;
 }
 
 export interface AccountHolding {
@@ -25,7 +26,7 @@ export interface AccountHolding {
 const MAINNET_ALGOD_URL = 'https://mainnet-api.algonode.cloud';
 const TESTNET_ALGOD_URL = 'https://testnet-api.algonode.cloud';
 
-export async function fetchLiveAlgodStatus(network: 'algorand-mainnet' | 'algorand-testnet' | 'local-sandbox'): Promise<AlgodNodeStatus> {
+export async function fetchLiveAlgodStatus(network: NetworkMode): Promise<AlgodNodeStatus> {
   const baseUrl = network === 'algorand-mainnet' ? MAINNET_ALGOD_URL : TESTNET_ALGOD_URL;
 
   try {
@@ -62,14 +63,14 @@ export async function fetchLiveAlgodStatus(network: 'algorand-mainnet' | 'algora
   }
 }
 
-export function getExplorerTxUrl(txId: string, network: 'algorand-mainnet' | 'algorand-testnet' | 'local-sandbox'): string {
+export function getExplorerTxUrl(txId: string, network: NetworkMode): string {
   if (network === 'algorand-mainnet') {
     return `https://allo.info/tx/${txId}`;
   }
   return `https://testnet.allo.info/tx/${txId}`;
 }
 
-export function getExplorerAccountUrl(address: string, network: 'algorand-mainnet' | 'algorand-testnet' | 'local-sandbox'): string {
+export function getExplorerAccountUrl(address: string, network: NetworkMode): string {
   if (network === 'algorand-mainnet') {
     return `https://allo.info/account/${address}`;
   }
