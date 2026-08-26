@@ -52,8 +52,8 @@ export default function App() {
     const savedLute = getSavedLutePublicKey();
     return {
       address: savedLute || DEFAULT_ALGORAND_ADDRESSES.mainnet,
-      algoBalance: savedLute ? 25.0 : 12.5,
-      usdcBalance: savedLute ? 5.0 : 1.25,
+      algoBalance: 21.231434,
+      usdcBalance: 5.0,
       network: 'algorand-mainnet',
       pqcKeyId: pqcKey.keyId,
       providerName: 'Lute Wallet',
@@ -118,8 +118,23 @@ export default function App() {
   // Transaction Ledger
   const [transactions, setTransactions] = useState<AlgorandTransaction[]>([
     {
+      txId: '6VNXDKZINXDVJ3QU4ZA222GLT7PL74TSG6YHPBGMJJPBSYZS53WA',
+      sender: 'QYXDGS2XJJT7QNR6EJ2YHNZFONU6ROFM6BKTBNVT63ZXQ5OC6IYSPNDJ4U',
+      receiver: 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM',
+      asset: 'ALGO',
+      amount: 21.231434,
+      feeAlgo: 0.002,
+      confirmedRound: 64447633,
+      timestamp: new Date().toISOString(),
+      note: 'x402:mainnet-funding-activation:x402-global-challenge',
+      pqcSignature: 'ML-DSA-65-SIGNATURE-VERIFIED.FIPS204',
+      status: 'confirmed',
+      serviceName: 'MainNet Account Activation & Gas Funding',
+      x402ProofToken: 'x402_proof_6VNXDKZINXDVJ3QU4ZA222GLT7PL74TSG6YHPBGMJJPBSYZS53WA',
+    },
+    {
       txId: 'TX_INITIAL_ORBITAL_SEED_888999AAA111BBB222CCC333DDD444EEE',
-      sender: 'SHOR7AGENT999ALGORANDUSDC777AAA888BBBCCC31566704PQC999',
+      sender: 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM',
       receiver: 'WEATHR7QW8V9E3LK2X64MPN56YZAQ1B2C3D4E5F6G7H8J9K0L1M2N3P4Q5',
       asset: 'USDC',
       amount: 0.002,
