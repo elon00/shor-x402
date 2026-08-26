@@ -16,9 +16,13 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
   }
 
   const bazaarData = {
-    name: 'SHOR x402 — Post-Quantum Autonomous Agent Commerce',
+    x402Version: '1.0.0',
     version: '1.0.0',
+    name: 'SHOR x402 — Post-Quantum Autonomous Agent Commerce Hub',
+    type: 'ai-orchestrator',
     category: 'ai-orchestrator',
+    description: 'Post-Quantum Autonomous Agent Commerce Protocol & Orchestration Engine on Algorand MainNet.',
+    lastUpdated: '2026-08-27T04:30:00Z',
     tags: [
       'x402-global-challenge',
       'algorand',
@@ -31,13 +35,21 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     provider: {
       name: 'SHOR Labs / Martin Luther',
       website: 'https://github.com/elon00/shor-x402',
-      payTo: 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM'
+      payTo: 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM',
+      network: 'algorand-mainnet',
+      caip2: 'algorand:wGHE2pwdvd7S12BL5Fa+PRx3TF3QXDYODnakNVUtvpU='
     },
     primaryEndpoint: {
       path: '/api/v1/shor/execute',
+      resource: '/api/v1/shor/execute',
       method: 'POST',
+      type: 'http',
+      accepts: ['USDC'],
       pricing: {
         costUsdc: 0.005,
+        amount: '0.005000',
+        currency: 'USDC',
+        assetId: 31566704,
         assetIdMainnet: 31566704,
         assetIdTestnet: 10458941
       },
@@ -46,8 +58,132 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
         testnet: 'algorand:SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI='
       },
       facilitator: 'https://x402.goplausible.xyz',
-      pqcSpecification: 'NIST FIPS 204 (ML-DSA-65) & FIPS 203 (ML-KEM-768)'
+      pqcSpecification: 'NIST FIPS 204 (ML-DSA-65) & FIPS 203 (ML-KEM-768)',
+      challengeTag: 'x402-global-challenge'
     },
+    resources: [
+      {
+        resource: '/api/v1/shor/execute',
+        path: '/api/v1/shor/execute',
+        name: 'SHOR Autonomous Agent Orchestrator',
+        type: 'http',
+        method: 'POST',
+        x402Version: '1.0.0',
+        accepts: ['USDC'],
+        costUsdc: 0.005,
+        pricing: {
+          costUsdc: 0.005,
+          amount: '0.005000',
+          currency: 'USDC',
+          assetId: 31566704
+        },
+        caip2: 'algorand:wGHE2pwdvd7S12BL5Fa+PRx3TF3QXDYODnakNVUtvpU=',
+        payTo: 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM',
+        facilitator: 'https://x402.goplausible.xyz',
+        description: 'Autonomous task planning, QUBO service optimization, and x402 USDC micro-settlement pipeline.',
+        lastUpdated: '2026-08-27T04:30:00Z'
+      },
+      {
+        resource: '/api/services/weather',
+        path: '/api/services/weather',
+        name: 'Planetary Radar & Hyperlocal Weather API',
+        type: 'http',
+        method: 'GET',
+        accepts: ['USDC'],
+        costUsdc: 0.002,
+        pricing: {
+          costUsdc: 0.002,
+          amount: '0.002000',
+          currency: 'USDC',
+          assetId: 31566704
+        },
+        caip2: 'algorand:wGHE2pwdvd7S12BL5Fa+PRx3TF3QXDYODnakNVUtvpU=',
+        payTo: 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM',
+        facilitator: 'https://x402.goplausible.xyz',
+        description: 'Doppler radar reflectivity and solar irradiance feed.',
+        lastUpdated: '2026-08-27T04:30:00Z'
+      },
+      {
+        resource: '/api/services/quantum-inference',
+        path: '/api/services/quantum-inference',
+        name: 'Quantum-Assisted Neural Inference Engine',
+        type: 'http',
+        method: 'GET',
+        accepts: ['USDC'],
+        costUsdc: 0.015,
+        pricing: {
+          costUsdc: 0.015,
+          amount: '0.015000',
+          currency: 'USDC',
+          assetId: 31566704
+        },
+        caip2: 'algorand:wGHE2pwdvd7S12BL5Fa+PRx3TF3QXDYODnakNVUtvpU=',
+        payTo: 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM',
+        facilitator: 'https://x402.goplausible.xyz',
+        description: 'QUBO-parameterized variational quantum ansatz inference.',
+        lastUpdated: '2026-08-27T04:30:00Z'
+      },
+      {
+        resource: '/api/services/satellite-compute',
+        path: '/api/services/satellite-compute',
+        name: 'Distributed Orbital Compute & GIS Matrix Engine',
+        type: 'http',
+        method: 'GET',
+        accepts: ['USDC'],
+        costUsdc: 0.05,
+        pricing: {
+          costUsdc: 0.05,
+          amount: '0.050000',
+          currency: 'USDC',
+          assetId: 31566704
+        },
+        caip2: 'algorand:wGHE2pwdvd7S12BL5Fa+PRx3TF3QXDYODnakNVUtvpU=',
+        payTo: 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM',
+        facilitator: 'https://x402.goplausible.xyz',
+        description: 'Sentinel-SAR radar interferogram compute.',
+        lastUpdated: '2026-08-27T04:30:00Z'
+      },
+      {
+        resource: '/api/services/market-depth',
+        path: '/api/services/market-depth',
+        name: 'Institutional Macro & Cross-Chain Liquidity Feed',
+        type: 'http',
+        method: 'GET',
+        accepts: ['USDC'],
+        costUsdc: 0.008,
+        pricing: {
+          costUsdc: 0.008,
+          amount: '0.008000',
+          currency: 'USDC',
+          assetId: 31566704
+        },
+        caip2: 'algorand:wGHE2pwdvd7S12BL5Fa+PRx3TF3QXDYODnakNVUtvpU=',
+        payTo: 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM',
+        facilitator: 'https://x402.goplausible.xyz',
+        description: 'Real-time Algo/USDC DEX liquidity & volatility smile skew.',
+        lastUpdated: '2026-08-27T04:30:00Z'
+      },
+      {
+        resource: '/api/services/pqc-entropy',
+        path: '/api/services/pqc-entropy',
+        name: 'True Quantum Entropy Seed Generator',
+        type: 'http',
+        method: 'GET',
+        accepts: ['USDC'],
+        costUsdc: 0.001,
+        pricing: {
+          costUsdc: 0.001,
+          amount: '0.001000',
+          currency: 'USDC',
+          assetId: 31566704
+        },
+        caip2: 'algorand:wGHE2pwdvd7S12BL5Fa+PRx3TF3QXDYODnakNVUtvpU=',
+        payTo: 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM',
+        facilitator: 'https://x402.goplausible.xyz',
+        description: 'Photon shot-noise hardware entropy source.',
+        lastUpdated: '2026-08-27T04:30:00Z'
+      }
+    ],
     endpoints: [
       {
         name: 'SHOR Autonomous Agent Orchestrator',
@@ -55,41 +191,6 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
         method: 'POST',
         costUsdc: 0.005,
         description: 'Autonomous task planning, QUBO service optimization, and x402 USDC micro-settlement pipeline.'
-      },
-      {
-        name: 'Planetary Radar & Hyperlocal Weather API',
-        path: '/api/services/weather',
-        method: 'GET',
-        costUsdc: 0.002,
-        description: 'Doppler radar reflectivity and solar irradiance feed.'
-      },
-      {
-        name: 'Quantum-Assisted Neural Inference Engine',
-        path: '/api/services/quantum-inference',
-        method: 'GET',
-        costUsdc: 0.015,
-        description: 'QUBO-parameterized variational quantum ansatz inference.'
-      },
-      {
-        name: 'Distributed Orbital Compute & GIS Matrix Engine',
-        path: '/api/services/satellite-compute',
-        method: 'GET',
-        costUsdc: 0.05,
-        description: 'Sentinel-SAR radar interferogram compute.'
-      },
-      {
-        name: 'Institutional Macro & Cross-Chain Liquidity Feed',
-        path: '/api/services/market-depth',
-        method: 'GET',
-        costUsdc: 0.008,
-        description: 'Real-time Algo/USDC DEX liquidity & volatility smile skew.'
-      },
-      {
-        name: 'True Quantum Entropy Seed Generator',
-        path: '/api/services/pqc-entropy',
-        method: 'GET',
-        costUsdc: 0.001,
-        description: 'Photon shot-noise hardware entropy source.'
       }
     ]
   };

@@ -1,4 +1,5 @@
 /.well-known/x402-bazaar.json  /.netlify/functions/bazaar        200!
+/.well-known/x402.json         /.netlify/functions/bazaar        200!
 /api/v1/shor/execute          /.netlify/functions/shor-execute 200!
 /api/v1/bazaar/discovery      /.netlify/functions/bazaar        200!
 /api/v1/x402/verify           /.netlify/functions/verify        200!
