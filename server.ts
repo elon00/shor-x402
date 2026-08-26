@@ -1,4 +1,4 @@
-import express from 'express';
+ï»¿import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
@@ -32,7 +32,7 @@ export const USDC_ASA_IDS = {
   testnet: 10458941, // Official TestNet USDC ASA
 };
 
-const OFFICIAL_RECIPIENT_ADDRESS = 'LUTE7AGENT999ALGORANDUSDC777AAA888BBBCCC31566704PQC999';
+const OFFICIAL_RECIPIENT_ADDRESS = 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM';
 const GOPLAUSIBLE_FACILITATOR_URL = 'https://x402.goplausible.xyz';
 const GLOBAL_CHALLENGE_TAG = 'x402-global-challenge';
 
@@ -74,7 +74,7 @@ async function startServer() {
 
   // --- Bazaar Machine-Readable Service Discovery Extension ---
   const bazaarDiscoveryPayload = {
-    name: 'SHOR x402 — Post-Quantum Autonomous Agent Commerce',
+    name: 'SHOR x402 â€” Post-Quantum Autonomous Agent Commerce',
     version: '1.0.0',
     description: 'Post-Quantum autonomous agent orchestrator with QUBO Hamiltonian optimization, Conway state engine, and x402 USDC micropayments on Algorand.',
     category: 'ai-orchestrator',
@@ -303,7 +303,7 @@ async function startServer() {
       service: 'Planetary Radar & Hyperlocal Weather API',
       receipt: { verifiedVia: 'x402-Algorand-USDC', costUsdc: 0.002, pqcVerified: true },
       telemetry: {
-        location: 'Global Geospatial Grid 48.8566° N, 2.3522° E',
+        location: 'Global Geospatial Grid 48.8566Â° N, 2.3522Â° E',
         timestamp: new Date().toISOString(),
         atmosphericPressureHpa: 1014.2,
         dopplerRadarReflectivityDbf: 24.8,
@@ -475,7 +475,7 @@ Only output the valid JSON block without markdown backticks.`;
           stepNumber: 2,
           title: 'Autonomous Service Discovery & QUBO Optimization',
           state: 'S4_EVALUATE',
-          reasoning: 'Solving H(x) = aC + ßL + ?R + dQ + ?P to select optimal endpoint.',
+          reasoning: 'Solving H(x) = aC + ÃŸL + ?R + dQ + ?P to select optimal endpoint.',
           costUsdc: 0,
         },
         {
@@ -520,3 +520,4 @@ Only output the valid JSON block without markdown backticks.`;
 }
 
 startServer();
+

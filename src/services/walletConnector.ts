@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Lute Wallet & Native Algorand Account Connector for SHOR x402
  * Connects directly to Lute Wallet (lute.app), Kibisis, Pera, or user-supplied Public Key.
  */
@@ -18,8 +18,8 @@ export interface ConnectedWalletInfo {
 
 // Default clean Algorand standard accounts (without mock mnemonics)
 export const DEFAULT_ALGORAND_ADDRESSES = {
-  mainnet: 'LUTE7AGENT999ALGORANDUSDC777AAA888BBBCCC31566704PQC999',
-  testnet: 'TESTNET7LUTE999ALGORANDUSDC777AAA888BBBCCC10458941PQC888',
+  mainnet: 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM',
+  testnet: 'TZ6ARRVMQEGRVMBISK7FYDPGIVYBLRSZUUS4A4DGPIEWDNJJ3KUSO66HUE',
 };
 
 // Validate standard Algorand 58-character Base32 address format
@@ -105,3 +105,4 @@ export async function connectLuteOrAlgorandWallet(network: NetworkMode = 'algora
     isCustomKey: false,
   };
 }
+
