@@ -1,7 +1,7 @@
-{
+﻿{
   "x402Version": "1.0.0",
   "version": "1.0.0",
-  "name": "SHOR x402 � Post-Quantum Autonomous Agent Commerce Hub",
+  "name": "SHOR x402 — Post-Quantum Autonomous Agent Commerce Hub",
   "type": "ai-orchestrator",
   "category": "ai-orchestrator",
   "description": "Post-Quantum Autonomous Agent Commerce Protocol & Orchestration Engine on Algorand MainNet.",
@@ -27,7 +27,9 @@
     "resource": "/api/v1/shor/execute",
     "method": "POST",
     "type": "http",
-    "accepts": ["USDC"],
+    "accepts": [
+      "USDC"
+    ],
     "pricing": {
       "costUsdc": 0.005,
       "amount": "0.005000",
@@ -52,7 +54,9 @@
       "type": "http",
       "method": "POST",
       "x402Version": "1.0.0",
-      "accepts": ["USDC"],
+      "accepts": [
+        "USDC"
+      ],
       "costUsdc": 0.005,
       "pricing": {
         "costUsdc": 0.005,
@@ -72,7 +76,9 @@
       "name": "Planetary Radar & Hyperlocal Weather API",
       "type": "http",
       "method": "GET",
-      "accepts": ["USDC"],
+      "accepts": [
+        "USDC"
+      ],
       "costUsdc": 0.002,
       "pricing": {
         "costUsdc": 0.002,
@@ -92,7 +98,9 @@
       "name": "Quantum-Assisted Neural Inference Engine",
       "type": "http",
       "method": "GET",
-      "accepts": ["USDC"],
+      "accepts": [
+        "USDC"
+      ],
       "costUsdc": 0.015,
       "pricing": {
         "costUsdc": 0.015,
@@ -112,7 +120,9 @@
       "name": "Distributed Orbital Compute & GIS Matrix Engine",
       "type": "http",
       "method": "GET",
-      "accepts": ["USDC"],
+      "accepts": [
+        "USDC"
+      ],
       "costUsdc": 0.05,
       "pricing": {
         "costUsdc": 0.05,
@@ -132,7 +142,9 @@
       "name": "Institutional Macro & Cross-Chain Liquidity Feed",
       "type": "http",
       "method": "GET",
-      "accepts": ["USDC"],
+      "accepts": [
+        "USDC"
+      ],
       "costUsdc": 0.008,
       "pricing": {
         "costUsdc": 0.008,
@@ -152,7 +164,9 @@
       "name": "True Quantum Entropy Seed Generator",
       "type": "http",
       "method": "GET",
-      "accepts": ["USDC"],
+      "accepts": [
+        "USDC"
+      ],
       "costUsdc": 0.001,
       "pricing": {
         "costUsdc": 0.001,
