@@ -27,7 +27,6 @@ import {
   clearSavedLutePublicKey,
   isValidAlgorandAddress,
 } from '../services/walletConnector';
-import { QrCodeViewer } from './QrCodeViewer';
 
 interface HeaderProps {
   activeTab: string;
@@ -281,9 +280,6 @@ export const Header: React.FC<HeaderProps> = ({
                 {wallet.address}
               </div>
             </div>
-
-            {/* Live Scan & Deposit QR Code for Binance & Mobile Wallets */}
-            <QrCodeViewer address={wallet.address} network={wallet.network} />
 
             {/* Set / Paste Custom Lute Wallet Public Key */}
             <div className="space-y-2 p-3.5 bg-slate-950/70 border border-slate-800/80 rounded-xl">
