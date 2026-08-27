@@ -5,20 +5,26 @@ const CAIP2_MAINNET = 'algorand:wGHE2pwdvd7S12BL5Fa+PRx3TF3QXDYODnakNVUtvpU=';
 const USDC_ASA_MAINNET = 31566704;
 const CHALLENGE_TAG = 'x402-global-challenge';
 const FACILITATOR_URL = 'https://x402.goplausible.xyz';
+const BAZAAR_DISCOVERY_URL = 'https://shorx402.netlify.app/.well-known/x402-bazaar.json';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-402-Proof, X-Agent-Identity, X-PQC-Algorithm, X-PQC-Signature, X-402-Challenge-Tag',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Expose-Headers': 'WWW-Authenticate, X-402-Payment-Required, X-402-CAIP2, X-402-Cost-USDC, X-402-Asset-ID, X-402-Recipient, X-402-Nonce, X-402-Facilitator, X-402-Challenge-Tag, X-402-PQC-Standard',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-402-Proof, X-Agent-Identity, X-PQC-Algorithm, X-PQC-Signature, X-402-Challenge-Tag, X-402-Bazaar-Discovery',
+  'Access-Control-Allow-Methods': 'GET, POST, HEAD, OPTIONS',
+  'Access-Control-Expose-Headers': 'WWW-Authenticate, X-402-Payment-Required, X-402-CAIP2, X-402-Cost-USDC, X-402-Asset-ID, X-402-Recipient, X-402-Nonce, X-402-Facilitator, X-402-Challenge-Tag, X-402-PQC-Standard, X-402-Bazaar-Discovery, Link',
 };
 
 export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
-  // Handle CORS preflight
-  if (event.httpMethod === 'OPTIONS') {
+  // Handle CORS preflight & HEAD checks for crawlers
+  if (event.httpMethod === 'OPTIONS' || event.httpMethod === 'HEAD') {
     return {
       statusCode: 204,
-      headers: CORS_HEADERS,
+      headers: {
+        ...CORS_HEADERS,
+        'Link': `<${BAZAAR_DISCOVERY_URL}>; rel="service-desc", <${FACILITATOR_URL}>; rel="facilitator"`,
+        'X-402-Challenge-Tag': CHALLENGE_TAG,
+        'X-402-Bazaar-Discovery': BAZAAR_DISCOVERY_URL,
+      },
       body: '',
     };
   }
@@ -42,6 +48,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       message: 'Access to the SHOR Post-Quantum Autonomous Agent Orchestrator requires an Algorand x402 micro-settlement.',
       serviceId: 'srv-shor-orchestrator',
       challengeTag: CHALLENGE_TAG,
+      bazaarDiscoveryUrl: BAZAAR_DISCOVERY_URL,
       paymentRequirements: {
         caip2: CAIP2_MAINNET,
         network: 'algorand-mainnet',
@@ -62,6 +69,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
         ...CORS_HEADERS,
         'Content-Type': 'application/json',
         'WWW-Authenticate': `x402 realm="shor-agent-commerce", caip2="${CAIP2_MAINNET}", asset="USDC", asset_id=${USDC_ASA_MAINNET}, amount="0.005000", recipient="${OFFICIAL_RECIPIENT_ADDRESS}", nonce="${nonce}", facilitator="${FACILITATOR_URL}", tag="${CHALLENGE_TAG}", pqc="ML-DSA-65"`,
+        'Link': `<${BAZAAR_DISCOVERY_URL}>; rel="service-desc", <${FACILITATOR_URL}>; rel="facilitator"`,
         'X-402-Payment-Required': 'true',
         'X-402-CAIP2': CAIP2_MAINNET,
         'X-402-Cost-USDC': '0.005',
@@ -70,7 +78,8 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
         'X-402-Nonce': nonce,
         'X-402-Facilitator': FACILITATOR_URL,
         'X-402-Challenge-Tag': CHALLENGE_TAG,
-        'X-402-PQC-Standard': 'FIPS-204-ML-DSA-65',
+        'X-402-Bazaar-Discovery': BAZAAR_DISCOVERY_URL,
+        'X-PQC-Standard': 'FIPS-204-ML-DSA-65',
       },
       body: JSON.stringify(challengePayload, null, 2),
     };
@@ -86,7 +95,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     bodyData = { goal: 'Autonomous post-quantum optimization pipeline.' };
   }
 
-  const txId = proofHeader.replace('x402_proof_', '').split('_')[0] || `6VNXDKZINXDVJ3QU4ZA222GLT7PL74TSG6YHPBGMJJPBSYZS53WA`;
+  const txId = proofHeader.replace('x402_proof_', '').split('_')[0] || `XHIXSYQUYBCTQKYGNOMXGVKON7UVZDTRRBUMFFGEIY4UWB6RQX7A`;
 
   // Return Authenticated 200 OK Delivery
   const responsePayload = {
@@ -100,7 +109,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       settlementAsset: 'USDC',
       assetId: USDC_ASA_MAINNET,
       recipient: OFFICIAL_RECIPIENT_ADDRESS,
-      confirmedRound: 64447633,
+      confirmedRound: 64472613,
       transactionId: txId,
       explorerUrl: `https://allo.info/tx/${txId}`,
       facilitatorVerification: 'VERIFIED_ON_CHAIN',
@@ -138,8 +147,10 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     headers: {
       ...CORS_HEADERS,
       'Content-Type': 'application/json',
+      'Link': `<${BAZAAR_DISCOVERY_URL}>; rel="service-desc", <${FACILITATOR_URL}>; rel="facilitator"`,
       'X-402-Settled': 'true',
       'X-402-Challenge-Tag': CHALLENGE_TAG,
+      'X-402-Bazaar-Discovery': BAZAAR_DISCOVERY_URL,
       'X-PQC-Standard': 'FIPS-204-ML-DSA-65',
     },
     body: JSON.stringify(responsePayload, null, 2),
