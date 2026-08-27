@@ -31,8 +31,14 @@ jobs:
       - name: TypeScript Static Typecheck
         run: npm run lint
 
+      - name: Automated Reality Gate Audit
+        run: npm run reality:gate
+
+      - name: Automated On-Chain Verification Tests
+        run: npm run test
+
       - name: Production Bundle Build (Vite & Server)
-        run: npm run build
+        run: npm run build:all
         env:
           NODE_ENV: production
 
