@@ -120,9 +120,13 @@ function getServiceMockPayload(service: PaidService) {
       },
     };
   } else {
-    const entropyHex = Array.from({ length: 32 }, () =>
-      Math.floor(Math.random() * 256).toString(16).padStart(2, '0')
-    ).join('');
+    const bytes = typeof crypto !== 'undefined' && crypto.getRandomValues ? new Uint8Array(32) : new Uint8Array(32);
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      crypto.getRandomValues(bytes);
+    }
+    const entropyHex = Array.from(bytes)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
     return {
       status: 'success',
       service: 'True Quantum Entropy Seed Generator',
@@ -162,7 +166,7 @@ export async function executeShorOrchestratorTask(
   const isTestnet = wallet.network === 'algorand-testnet';
   const caip2 = isTestnet ? CAIP2_NETWORKS.testnet : CAIP2_NETWORKS.mainnet;
   const assetId = isTestnet ? USDC_ASA_IDS.testnet : USDC_ASA_IDS.mainnet;
-  const nonce = `x402_nonce_${Math.random().toString(36).substring(2, 12)}`;
+  const nonce = `x402_nonce_${typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : Date.now().toString(36)}`;
 
   // Step 1: Initial unauthenticated request -> expect 402
   const initialHeaders = {
@@ -386,7 +390,7 @@ export async function executeX402ServiceRequest(
   const isTestnet = wallet.network === 'algorand-testnet';
   const assetId = isTestnet ? USDC_ASA_IDS.testnet : USDC_ASA_IDS.mainnet;
   const caip2 = isTestnet ? CAIP2_NETWORKS.testnet : CAIP2_NETWORKS.mainnet;
-  const nonce = `x402_nonce_${Math.random().toString(36).substring(2, 12)}`;
+  const nonce = `x402_nonce_${typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : Date.now().toString(36)}`;
 
   try {
     // Step 1: Initial unauthenticated request -> expect 402
