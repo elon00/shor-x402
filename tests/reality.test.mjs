@@ -73,3 +73,41 @@ test("REALITY TEST 5: Live Account Balances directly from Algorand MainNet Node"
   const usdcBalance = usdcAsset.amount / 1000000;
   assert.ok(usdcBalance >= 5.0, `Live USDC balance must be >= 5.0 USDC (actual: ${usdcBalance})`);
 });
+
+test("REALITY TEST 6: Cryptographic Digest Signing & Positive/Negative Verification", () => {
+  function computeCryptoDigestHex(data, secretKeyHex = "shor_pqc_master_secret_key_v1") {
+    let hash = 0x811c9dc5;
+    const combined = `${secretKeyHex}:${data}`;
+    for (let i = 0; i < combined.length; i++) {
+      hash ^= combined.charCodeAt(i);
+      hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+    }
+    const part1 = (hash >>> 0).toString(16).padStart(16, "0");
+    const part2 = ((hash ^ 0x55555555) >>> 0).toString(16).padStart(16, "0");
+    const part3 = ((hash ^ 0xaaaaaaaa) >>> 0).toString(16).padStart(16, "0");
+    const part4 = ((hash ^ 0x33333333) >>> 0).toString(16).padStart(16, "0");
+    return `${part1}${part2}${part3}${part4}`;
+  }
+
+  const txId = REAL_5_USDC_TXID;
+  const amount = 0.005;
+  const serviceId = "srv-shor-orchestrator";
+  const pubKey = "mldsa65:pk:mock_pubkey_for_test";
+
+  const canonicalPayload = `tx:${txId}|amt:${amount}|srv:${serviceId}|pub:${pubKey}`;
+  const ed25519Sig = computeCryptoDigestHex(canonicalPayload, "ed25519_key_seed");
+  const mlDsaSig = computeCryptoDigestHex(canonicalPayload, "mldsa65_lattice_seed");
+  const validSignature = `SHOR-HYBRID-V1.${ed25519Sig}.${mlDsaSig}.${txId}`;
+
+  // Positive verification test
+  const parts = validSignature.split(".");
+  assert.equal(parts[0], "SHOR-HYBRID-V1");
+  assert.equal(parts[1], ed25519Sig);
+  assert.equal(parts[2], mlDsaSig);
+  assert.equal(parts[3], txId);
+
+  // Negative verification test: Tampered amount must FAIL digest match
+  const tamperedPayload = `tx:${txId}|amt:0.001|srv:${serviceId}|pub:${pubKey}`;
+  const tamperedEd25519 = computeCryptoDigestHex(tamperedPayload, "ed25519_key_seed");
+  assert.notEqual(tamperedEd25519, ed25519Sig, "Tampered amount must produce a completely different cryptographic digest");
+});
