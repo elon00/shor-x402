@@ -1,4 +1,4 @@
-﻿import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
+import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 
 const OFFICIAL_RECIPIENT_ADDRESS = 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM';
 const USDC_ASA_MAINNET = 31566704;
@@ -48,12 +48,33 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
   }
 
   try {
-    // Query Live Algorand MainNet Indexer
-    const res = await fetch(`https://mainnet-idx.algonode.cloud/v2/transactions/${txId}`, {
-      headers: { 'Accept': 'application/json' },
-    });
+    // Resilient Multi-Node Algorand MainNet Indexer Query (AlgoNode + Nodely)
+    const indexerUrls = [
+      `https://mainnet-idx.algonode.cloud/v2/transactions/${txId}`,
+      `https://mainnet-idx.4160.nodely.dev/v2/transactions/${txId}`,
+    ];
 
-    if (!res.ok) {
+    let tx: any = null;
+    let lastStatus = 404;
+
+    for (const url of indexerUrls) {
+      try {
+        const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.transaction) {
+            tx = data.transaction;
+            break;
+          }
+        } else {
+          lastStatus = res.status;
+        }
+      } catch (e) {
+        // failover to next authoritative indexer
+      }
+    }
+
+    if (!tx) {
       return {
         statusCode: 404,
         headers: {
@@ -62,14 +83,11 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
         },
         body: JSON.stringify({
           verified: false,
-          error: `Transaction ${txId} was not found on Algorand MainNet (HTTP ${res.status}).`,
+          error: `Transaction ${txId} was not found on Algorand MainNet (HTTP ${lastStatus}).`,
           transactionId: txId,
         }, null, 2),
       };
     }
-
-    const data = await res.json();
-    const tx = data.transaction;
 
     if (!tx) {
       return {

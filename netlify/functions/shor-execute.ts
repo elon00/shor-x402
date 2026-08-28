@@ -1,4 +1,4 @@
-﻿import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
+import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import crypto from 'node:crypto';
 
 const OFFICIAL_RECIPIENT_ADDRESS = 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM';
@@ -48,16 +48,35 @@ async function verifyAlgorandPaymentOnChain(txId: string, minAmountUsdc: number 
   }
 
   try {
-    const res = await fetch(`https://mainnet-idx.algonode.cloud/v2/transactions/${cleanTxId}`, {
-      headers: { 'Accept': 'application/json' },
-    });
+    // Resilient Multi-Node Algorand MainNet Indexer Query (AlgoNode + Nodely)
+    const indexerUrls = [
+      `https://mainnet-idx.algonode.cloud/v2/transactions/${cleanTxId}`,
+      `https://mainnet-idx.4160.nodely.dev/v2/transactions/${cleanTxId}`,
+    ];
 
-    if (!res.ok) {
-      return { verified: false, error: `Transaction not found on Algorand MainNet indexer (HTTP ${res.status}).` };
+    let tx: any = null;
+    let lastStatus = 404;
+
+    for (const url of indexerUrls) {
+      try {
+        const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.transaction) {
+            tx = data.transaction;
+            break;
+          }
+        } else {
+          lastStatus = res.status;
+        }
+      } catch (e) {
+        // failover
+      }
     }
 
-    const data = await res.json();
-    const tx = data.transaction;
+    if (!tx) {
+      return { verified: false, error: `Transaction not found on Algorand MainNet indexers (HTTP ${lastStatus}).` };
+    }
 
     if (!tx) {
       return { verified: false, error: 'Transaction data missing in Algorand indexer response.' };
