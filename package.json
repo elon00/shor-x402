@@ -13,7 +13,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "test": "node --test tests/reality.test.mjs",
+    "test": "node --import tsx --test tests/reality.test.mjs tests/pqc-real.test.ts",
     "reality:gate": "node reality-gate.mjs",
     "verify:reality": "npm run reality:gate && npm run test && npm run build:all"
   },
@@ -45,7 +45,6 @@
     "recharts": "^3.10.1",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.3"
+    "typescript": "~5.8.2"
   }
 }
