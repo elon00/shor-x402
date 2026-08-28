@@ -15,7 +15,8 @@
     "lint": "tsc --noEmit",
     "test": "node --test tests/reality.test.mjs",
     "reality:gate": "node reality-gate.mjs",
-    "verify:reality": "npm run reality:gate && npm run test && npm run build:all"
+    "production:claim-gate": "node scripts/production-claim-gate.mjs",
+    "verify:reality": "npm run reality:gate && npm run production:claim-gate && npm run test && npm run build:all"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
