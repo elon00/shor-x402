@@ -10,9 +10,9 @@ export const SHOR_NETWORK = ALGORAND_MAINNET_CAIP2 as `algorand:${string}`;
 export const SHOR_USDC_ASSET = USDC_MAINNET_ASA_ID;
 
 /**
- * Install the official x402 V2 resource-server middleware.
+ * Official x402 V2 Algorand resource-server integration.
  * Verification and settlement are delegated to the configured facilitator;
- * this application does not infer payment validity from a transaction-id header.
+ * payment validity is never inferred from a transaction-id header.
  */
 export function installShorX402(app: Express): void {
   const facilitatorClient = new HTTPFacilitatorClient({
@@ -29,9 +29,7 @@ export function installShorX402(app: Express): void {
         network: SHOR_NETWORK,
         payTo: SHOR_PAY_TO,
         price: '$0.005',
-        extra: {
-          asset: SHOR_USDC_ASSET,
-        },
+        extra: { asset: SHOR_USDC_ASSET },
         maxTimeoutSeconds: 60,
       },
       description: 'SHOR autonomous orchestration endpoint paid with Algorand USDC through x402 V2.',
