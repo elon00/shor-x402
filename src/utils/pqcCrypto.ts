@@ -1,82 +1,60 @@
-﻿import { PqcKeyPair } from '../types';
+import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js';
+import type { PqcKeyPair } from '../types';
+
+const keyMaterial = new WeakMap<PqcKeyPair, Uint8Array>();
+const encoder = new TextEncoder();
+
+function bytesToBase64(bytes: Uint8Array): string {
+  return Buffer.from(bytes).toString('base64');
+}
+
+function base64ToBytes(value: string): Uint8Array {
+  return new Uint8Array(Buffer.from(value, 'base64'));
+}
+
+function messageBytes(value: string): Uint8Array {
+  return encoder.encode(value);
+}
 
 /**
- * SHOR Post-Quantum Cryptography (PQC) & Hybrid Signature Subsystem
- * Grounded in NIST FIPS 204 (ML-DSA-65) and NIST FIPS 203 (ML-KEM-768) specification structures.
- * Implements real cryptographic key generation, SHA-256 HMAC digest signing, and timing-safe verification.
+ * Real NIST FIPS 204 ML-DSA-65 key generation.
+ * Private key material is retained only in-memory and is never placed in PqcKeyPair.
+ * ML-KEM is intentionally not masqueraded as a signature algorithm here.
  */
-
-// Cryptographically secure random bytes generator
-function getCryptoBytes(length: number): Uint8Array {
-  const bytes = new Uint8Array(length);
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-    crypto.getRandomValues(bytes);
-  } else {
-    // Fallback pseudo-entropy for isolated node test runners
-    for (let i = 0; i < length; i++) {
-      bytes[i] = (Date.now() + i * 37) & 0xff;
-    }
-  }
-  return bytes;
-}
-
-// Convert byte array to hexadecimal string
-function bytesToHex(bytes: Uint8Array): string {
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
-// Fast synchronous SHA-256 / HMAC cryptographic digest for hybrid signatures
-export function computeCryptoDigestHex(data: string, secretKeyHex: string = 'shor_pqc_master_secret_key_v1'): string {
-  let hash = 0x811c9dc5;
-  const combined = `${secretKeyHex}:${data}`;
-  for (let i = 0; i < combined.length; i++) {
-    hash ^= combined.charCodeAt(i);
-    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
-  }
-  // Produce standard 64-character deterministic hex digest
-  const part1 = (hash >>> 0).toString(16).padStart(16, '0');
-  const part2 = ((hash ^ 0x55555555) >>> 0).toString(16).padStart(16, '0');
-  const part3 = ((hash ^ 0xaaaaaaaa) >>> 0).toString(16).padStart(16, '0');
-  const part4 = ((hash ^ 0x33333333) >>> 0).toString(16).padStart(16, '0');
-  return `${part1}${part2}${part3}${part4}`;
-}
-
 export function generatePqcKeyPair(
-  algorithm: 'ML-KEM-768' | 'ML-DSA-65' | 'Hybrid-Ed25519-Dilithium' = 'Hybrid-Ed25519-Dilithium'
+  algorithm: 'ML-KEM-768' | 'ML-DSA-65' | 'Hybrid-Ed25519-Dilithium' = 'ML-DSA-65'
 ): PqcKeyPair {
-  const privBytes = getCryptoBytes(32);
-  const pubBytes = getCryptoBytes(32);
-  const privHex = bytesToHex(privBytes);
-  const pubHex = bytesToHex(pubBytes);
+  if (algorithm !== 'ML-DSA-65') {
+    throw new Error(`Unsupported signature algorithm: ${algorithm}. Use ML-DSA-65 for FIPS 204 signatures.`);
+  }
 
-  const keyId = `pqc-key-${pubHex.substring(0, 12)}`;
-  const bitSize = algorithm === 'ML-KEM-768' ? 9472 : algorithm === 'ML-DSA-65' ? 15616 : 16000;
-  const nistLevel = 3; // NIST Category 3 Security
-
-  const pubKey = algorithm === 'ML-KEM-768' ? `ml-kem-768:pk:${pubHex}` : `mldsa65:pk:${pubHex}`;
-  const privPreview = `••••••••••••••••••••••••••••••••${privHex.substring(0, 8)}`;
-  const fingerprint = `SHA3-256:${pubHex.substring(0, 32).toUpperCase()}`;
-
-  return {
-    keyId,
-    algorithm,
-    publicKey: pubKey,
-    publicKeyFingerprint: fingerprint,
-    privateKeyPreview: privPreview,
-    keySizeBits: bitSize,
-    nistSecurityLevel: nistLevel,
+  const keys = ml_dsa65.keygen();
+  const publicKey = `mldsa65:pk:${bytesToBase64(keys.publicKey)}`;
+  const keyPair: PqcKeyPair = {
+    keyId: `pqc-key-${bytesToBase64(keys.publicKey).slice(0, 16)}`,
+    algorithm: 'ML-DSA-65',
+    publicKey,
+    publicKeyFingerprint: `ML-DSA-65:${bytesToBase64(keys.publicKey).slice(0, 32)}`,
+    privateKeyPreview: '[redacted: in-memory only]',
+    keySizeBits: 4032 * 8,
+    nistSecurityLevel: 3,
     createdAt: new Date().toISOString(),
     authorizedForAgent: true,
   };
+
+  keyMaterial.set(keyPair, keys.secretKey);
+  return keyPair;
 }
 
+/**
+ * Real ML-DSA-65 signing. The legacy function name is retained for API compatibility,
+ * but no fabricated Ed25519 or hash-based signature is generated.
+ */
 export function createPqcHybridSignature(
   txId: string,
   keyPair: PqcKeyPair,
   amount: number,
-  serviceId: string
+  serviceId: string,
 ): {
   hybridSignature: string;
   mlDsaComponent: string;
@@ -84,19 +62,26 @@ export function createPqcHybridSignature(
   verificationProof: string;
   quantumResistanceScore: number;
 } {
+  if (keyPair.algorithm !== 'ML-DSA-65') {
+    throw new Error('Only real ML-DSA-65 keys are accepted by the production signature path.');
+  }
+
+  const secretKey = keyMaterial.get(keyPair);
+  if (!secretKey) {
+    throw new Error('ML-DSA-65 private key material is unavailable. Regenerate the in-memory key pair.');
+  }
+
   const canonicalPayload = `tx:${txId}|amt:${amount}|srv:${serviceId}|pub:${keyPair.publicKey}`;
-  const ed25519Sig = computeCryptoDigestHex(canonicalPayload, 'ed25519_key_seed');
-  const mlDsaSig = computeCryptoDigestHex(canonicalPayload, 'mldsa65_lattice_seed');
-  const hybridSignature = `SHOR-HYBRID-V1.${ed25519Sig}.${mlDsaSig}.${txId}`;
-  const proofDigest = computeCryptoDigestHex(hybridSignature, 'pqc_proof_verifier');
-  const verificationProof = `PQC-PROOF-${proofDigest.substring(0, 16).toUpperCase()}-FIPS204-SPEC`;
+  const signature = ml_dsa65.sign(messageBytes(canonicalPayload), secretKey);
+  const signatureBase64 = bytesToBase64(signature);
+  const hybridSignature = `SHOR-MLDSA65-V1.${signatureBase64}.${txId}`;
 
   return {
     hybridSignature,
-    mlDsaComponent: mlDsaSig,
-    ed25519Component: ed25519Sig,
-    verificationProof,
-    quantumResistanceScore: 99.8,
+    mlDsaComponent: signatureBase64,
+    ed25519Component: '',
+    verificationProof: 'FIPS-204-ML-DSA-65-VERIFIED-BY-STANDARD-IMPLEMENTATION',
+    quantumResistanceScore: 1.0,
   };
 }
 
@@ -104,8 +89,8 @@ export function verifyPqcSignature(
   signature: string,
   txId: string,
   publicKey: string,
-  amount: number = 0.005,
-  serviceId: string = 'srv-shor-orchestrator'
+  amount = 0.005,
+  serviceId = 'srv-shor-orchestrator',
 ): {
   valid: boolean;
   algorithm: string;
@@ -114,45 +99,36 @@ export function verifyPqcSignature(
   latticeVerificationTimeUs: number;
   securityBits: number;
 } {
-  if (!signature || !signature.startsWith('SHOR-HYBRID-V1.') || !signature.includes(txId)) {
-    return {
-      valid: false,
-      algorithm: 'Hybrid-Ed25519-PQC (NIST FIPS 204 Specification)',
-      specification: 'NIST FIPS 204 (ML-DSA-65) & FIPS 203 (ML-KEM-768)',
-      signatureDigestMatch: false,
-      latticeVerificationTimeUs: 0,
-      securityBits: 0,
-    };
-  }
+  const invalid = (elapsedUs = 0) => ({
+    valid: false,
+    algorithm: 'ML-DSA-65',
+    specification: 'NIST FIPS 204',
+    signatureDigestMatch: false,
+    latticeVerificationTimeUs: elapsedUs,
+    securityBits: 0,
+  });
 
+  if (!signature || !signature.startsWith('SHOR-MLDSA65-V1.')) return invalid();
   const parts = signature.split('.');
-  if (parts.length < 4) {
+  if (parts.length !== 3 || parts[2] !== txId || !publicKey.startsWith('mldsa65:pk:')) return invalid();
+
+  try {
+    const canonicalPayload = `tx:${txId}|amt:${amount}|srv:${serviceId}|pub:${publicKey}`;
+    const sig = base64ToBytes(parts[1]);
+    const pk = base64ToBytes(publicKey.slice('mldsa65:pk:'.length));
+    const start = performance.now();
+    const valid = ml_dsa65.verify(sig, messageBytes(canonicalPayload), pk);
+    const elapsedUs = Math.round((performance.now() - start) * 1000);
+
     return {
-      valid: false,
-      algorithm: 'Hybrid-Ed25519-PQC (NIST FIPS 204 Specification)',
-      specification: 'NIST FIPS 204 (ML-DSA-65) & FIPS 203 (ML-KEM-768)',
-      signatureDigestMatch: false,
-      latticeVerificationTimeUs: 0,
-      securityBits: 0,
+      valid,
+      algorithm: 'ML-DSA-65',
+      specification: 'NIST FIPS 204',
+      signatureDigestMatch: valid,
+      latticeVerificationTimeUs: elapsedUs,
+      securityBits: valid ? 192 : 0,
     };
+  } catch {
+    return invalid();
   }
-
-  const ed25519Sig = parts[1];
-  const mlDsaSig = parts[2];
-  const embeddedTxId = parts[3];
-
-  const canonicalPayload = `tx:${embeddedTxId}|amt:${amount}|srv:${serviceId}|pub:${publicKey}`;
-  const expectedEd25519 = computeCryptoDigestHex(canonicalPayload, 'ed25519_key_seed');
-  const expectedMlDsa = computeCryptoDigestHex(canonicalPayload, 'mldsa65_lattice_seed');
-
-  const isDigestValid = (ed25519Sig === expectedEd25519) && (mlDsaSig === expectedMlDsa);
-
-  return {
-    valid: isDigestValid,
-    algorithm: 'Hybrid-Ed25519-PQC (NIST FIPS 204 Specification)',
-    specification: 'NIST FIPS 204 (ML-DSA-65) & FIPS 203 (ML-KEM-768)',
-    signatureDigestMatch: isDigestValid,
-    latticeVerificationTimeUs: 195,
-    securityBits: 192,
-  };
 }

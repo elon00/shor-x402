@@ -13,13 +13,14 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "test": "node --test tests/reality.test.mjs",
+    "test": "node --import tsx --test tests/reality.test.mjs tests/pqc-real.test.ts",
     "reality:gate": "node reality-gate.mjs",
     "verify:reality": "npm run reality:gate && npm run test && npm run build:all"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
     "@netlify/functions": "^6.0.0",
+    "@noble/post-quantum": "^0.7.0",
     "@tailwindcss/vite": "^4.1.14",
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
@@ -27,6 +28,9 @@
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^5.0.4",
+    "@x402/avm": "^2.24.0",
+    "@x402/core": "^2.24.0",
+    "@x402/express": "^2.23.0",
     "autoprefixer": "^10.4.21",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
@@ -42,6 +46,6 @@
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.3"
+    "vite": "^7.1.3"
   }
 }
