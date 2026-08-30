@@ -9,6 +9,9 @@ const forbidden = [
   { pattern: /const\s+txId\s*=\s*`TX_MAINNET_\${/g, name: "Fabricated fake transaction ID string" },
   { pattern: /algoBalance:\s*25\.0/g, name: "Hardcoded fake wallet balance" },
   { pattern: /algoBalance:\s*12\.5/g, name: "Hardcoded fake fallback balance" },
+  { pattern: /quantumResistanceScore:\s*99\.8/g, name: "Fabricated quantum-resistance score" },
+  { pattern: /NIST FIPS 204 Specification.*HMAC|HMAC.*ML-DSA/gi, name: "HMAC presented as ML-DSA/FIPS 204 implementation" },
+  { pattern: /return\s+true;\s*\/\/.*ML-DSA|verifyPqcSignature[\s\S]{0,300}valid:\s*true/g, name: "Unverified PQC success result" },
 ];
 
 const allowedDirs = ["node_modules", ".git", "dist", "build", "coverage", "tests"];
