@@ -7,13 +7,13 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Deploy with Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/elon00/shor-x402)
 
-> **SHOR x402** is a quantum-resilient, autonomous economic protocol and agent commerce command hub built natively on the **Algorand Blockchain**. It unifies **Hierarchical AI Task Planning**, **11-State Conway Cellular Automaton State Transitions**, **QUBO/QAOA Combinatorial Service Optimization**, **Wire-Level HTTP 402 Machine-to-Machine Settlements**, and **NIST FIPS 203/204 Post-Quantum Cryptography (ML-DSA-65 & ML-KEM-768)** into a production-grade Web 4.0 operating platform.
+> **SHOR x402** is an AI-agent commerce prototype exploring HTTP 402 payment challenges, Algorand USDC settlement verification, Conway state transitions, and optimization workflows. The checked-in PQC helper does **not** implement ML-DSA-65 or ML-KEM-768; PQC is a future integration target pending a reviewed implementation and test evidence.
 
 ---
 
 > ⚠️ **Evidence rule:** “LIVE”, “ACTIVE”, “CONFIRMED”, and “VERIFIED” claims below must be independently reproducible from the linked deployment and on-chain records. A README claim alone is not cryptographic or payment proof. Run `npm run verify:reality` for repository checks; verify external settlement separately against the cited network/explorer evidence.
 
-## 🏆 Global x402 Challenge — Verified MainNet Status
+## 🏆 Global x402 Challenge — Evidence Status
 
 | Requirement | Live Status | Verified MainNet Data |
 | :--- | :---: | :--- |
@@ -144,4 +144,4 @@ npm run dev
 
 Distributed under the **Apache-2.0 License**. See `LICENSE` for more information.
 
-**SHOR x402** — *Pioneering the Post-Quantum Autonomous Machine Economy on Algorand.*
+**SHOR x402** — research and prototype work; cryptographic and deployment claims require reproducible evidence.
