@@ -11,6 +11,8 @@
 
 ---
 
+> ⚠️ **Evidence rule:** “LIVE”, “ACTIVE”, “CONFIRMED”, and “VERIFIED” claims below must be independently reproducible from the linked deployment and on-chain records. A README claim alone is not cryptographic or payment proof. Run `npm run verify:reality` for repository checks; verify external settlement separately against the cited network/explorer evidence.
+
 ## 🏆 Global x402 Challenge — Verified MainNet Status
 
 | Requirement | Live Status | Verified MainNet Data |
