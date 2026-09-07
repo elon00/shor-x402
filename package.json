@@ -14,8 +14,12 @@
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
     "test": "node --test tests/reality.test.mjs",
+    "test:nist": "tsx tests/nist-pqc.test.mjs",
+    "audit:crypto": "node scripts/audit-crypto.mjs",
     "reality:gate": "node reality-gate.mjs",
-    "verify:reality": "npm run check:env && npm run reality:gate && npm run test && npm run lint && npm run build:all",
+    "reality:universal": "tsx scripts/reality-universal.ts",
+    "reality:certify": "tsx scripts/generate-urs-certificate.ts",
+    "verify:reality": "npm run check:env && npm run reality:gate && npm run test && npm run test:nist && npm run audit:crypto && npm run reality:universal && npm run lint && npm run build:all",
     "check:env": "node scripts/check-env.mjs"
   },
   "dependencies": {

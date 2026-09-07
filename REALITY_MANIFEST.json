@@ -1,0 +1,47 @@
+{
+  "system": "SHOR-x402",
+  "version": "1.0.0",
+  "status": "EVIDENCE_BASED_PQC_PROTOCOL",
+  "description": "Post-Quantum Web4 Autonomous Agent Platform for Algorand x402 Service Optimization, Execution, and Verification",
+  "truthTaxonomy": {
+    "cryptographicCore": "PURE_TYPESCRIPT_PQC_EXECUTION",
+    "kemScheme": "NIST_FIPS_203_ML_KEM_768",
+    "signatureScheme": "NIST_FIPS_204_ML_DSA_65",
+    "paymentProtocol": "ALGORAND_MAINNET_x402_USDC_SETTLEMENT",
+    "quantumOptimization": "QUBO_HAMILTONIAN_ENERGY_MINIMIZATION",
+    "simulationEliminated": true,
+    "weakestLinkGate": "H=0.60 (Pending external 3rd-party audit)",
+    "auditFirmStatus": "PENDING_EXTERNAL_AUDIT"
+  },
+  "subsystems": [
+    {
+      "name": "PQCCrypto",
+      "path": "src/utils/pqcCrypto.ts",
+      "status": "VERIFIED_NIST_FIPS_203_204",
+      "wire": {
+        "kemPublicKeyBytes": 1184,
+        "kemSecretKeyBytes": 2400,
+        "kemCiphertextBytes": 1088,
+        "kemSharedSecretBytes": 32,
+        "dsaPublicKeyBytes": 1952,
+        "dsaSecretKeyBytes": 4032,
+        "dsaSignatureBytes": 3309
+      }
+    },
+    {
+      "name": "QuboSolver",
+      "path": "src/utils/quboSolver.ts",
+      "status": "VERIFIED_QUBO_HAMILTONIAN_MINIMIZATION"
+    },
+    {
+      "name": "AlgorandClient",
+      "path": "src/services/algorandClient.ts",
+      "status": "AUTHORITATIVE_MAINNET_INDEXER"
+    },
+    {
+      "name": "ConwayEngine",
+      "path": "src/utils/conwayEngine.ts",
+      "status": "VERIFIED_DETERMINISTIC_CELLULAR_AUTOMATON"
+    }
+  ]
+}

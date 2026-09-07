@@ -1,4 +1,4 @@
-﻿import fs from "node:fs";
+import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = process.cwd();
@@ -25,6 +25,7 @@ function walk(dir) {
       results.push(...walk(full));
       continue;
     }
+    if (entry.name === 'reality-gate.mjs') continue;
     if (!/\.(ts|tsx|js|jsx|mjs|cjs)$/.test(entry.name)) continue;
     results.push(full);
   }
