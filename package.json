@@ -20,11 +20,14 @@
     "reality:universal": "tsx scripts/reality-universal.ts",
     "reality:certify": "tsx scripts/generate-urs-certificate.ts",
     "verify:reality": "npm run check:env && npm run reality:gate && npm run test && npm run test:nist && npm run audit:crypto && npm run reality:universal && npm run lint && npm run build:all",
-    "check:env": "node scripts/check-env.mjs"
+    "check:env": "node scripts/check-env.mjs",
+    "qmoosa:finish": "node scripts/start-and-finish-everything.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
     "@netlify/functions": "^6.0.0",
+    "@noble/hashes": "^1.7.1",
+    "@noble/post-quantum": "^0.7.1",
     "@tailwindcss/vite": "^4.1.14",
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",

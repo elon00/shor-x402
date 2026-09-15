@@ -1,8 +1,8 @@
 import { PqcKeyPair } from '../types';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem.js';
 import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js';
-import { sha256 } from '@noble/hashes/sha256.js';
-import { hkdf } from '@noble/hashes/hkdf.js';
+import { sha256 } from '@noble/hashes/sha256';
+import { hkdf } from '@noble/hashes/hkdf';
 
 export function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
