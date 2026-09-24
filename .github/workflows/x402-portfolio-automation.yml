@@ -1,0 +1,44 @@
+name: x402 Portfolio Automation
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"
+  push:
+    branches: [main]
+    paths:
+      - "x402-bazaar.json"
+      - "netlify/functions/**"
+      - "scripts/**"
+      - "package.json"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: x402-portfolio-automation
+  cancel-in-progress: true
+
+jobs:
+  verify-x402:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Repository reality checks
+        run: npm run verify:reality --if-present
+      - name: Test x402 implementation
+        run: npm run test:x402 --if-present
+      - name: Validate Bazaar manifest
+        shell: bash
+        run: |
+          test -f x402-bazaar.json
+          node -e "const x=require('./x402-bazaar.json'); if(!x.name || !x.primaryEndpoint || !x.provider) process.exit(1)"
+      - name: Check live Bazaar discovery
+        continue-on-error: true
+        run: curl --fail --retry 2 --max-time 20 https://shorx402.netlify.app/.well-known/x402-bazaar.json
