@@ -4,7 +4,7 @@ const OFFICIAL_RECIPIENT_ADDRESS = 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQ
 const USDC_ASA_MAINNET = 31566704;
 const MINIMUM_REQUIRED_USDC = 0.005; // 0.005 USDC = 5,000 micro-USDC
 const CHALLENGE_TAG = 'x402-global-challenge';
-const CAIP2_MAINNET = 'algorand:wGHE2pwdvd7S12BL5Fa+PRx3TF3QXDYODnakNVUtvpU=';
+const CAIP2_MAINNET = 'algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -30,10 +30,12 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     // empty body
   }
 
-  const txId = (body.transactionId || body.txId || event.queryStringParameters?.txId || '').trim();
-  const minAmount = Number(body.minAmountUsdc || event.queryStringParameters?.minAmountUsdc || MINIMUM_REQUIRED_USDC);
+  const providedId = body.transactionId ?? body.txId ?? event.queryStringParameters?.txId;
+  const txId = typeof providedId === 'string' ? providedId.trim() : '';
+  // Never let clients lower the required amount. This endpoint is a READ-ONLY chain inspector.
+  const minAmount = MINIMUM_REQUIRED_USDC;
 
-  if (!txId) {
+  if (!/^[A-Z2-7]{52}$/.test(txId)) {
     return {
       statusCode: 400,
       headers: {
@@ -42,7 +44,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       },
       body: JSON.stringify({
         verified: false,
-        error: 'Missing required transactionId in request body or query parameter.',
+        error: 'A valid 52-character Algorand transactionId is required.',
       }, null, 2),
     };
   }
@@ -179,11 +181,16 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       };
     }
 
+    // On-chain transfer confirmation does NOT prove x402 facilitator settlement, challenge
+    // ownership, replay safety, or PQC. This inspector MUST NOT authorize paid execution.
     const verificationResult = {
-      verified: true,
-      status: 'settled',
-      scheme: 'x402-algo',
-      facilitator: 'https://x402.goplausible.xyz',
+      verified: false,
+      onChainTransferVerified: true,
+      authorizedForPaidExecution: false,
+      facilitatorSettlementVerified: false,
+      pqcSignatureVerified: false,
+      status: 'on_chain_transfer_confirmed_not_authorized',
+      scheme: 'algorand-usdc-transfer',
       challengeTag: CHALLENGE_TAG,
       network: CAIP2_MAINNET,
       asset: 'USDC',
@@ -196,7 +203,6 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       confirmedRound,
       roundTime: tx['round-time'],
       explorerUrl: `https://allo.info/tx/${txId}`,
-      pqcAttestation: 'STANDARDIZED_HYBRID_ED25519_VERIFIED',
       timestamp: tx['round-time'] ? new Date(tx['round-time'] * 1000).toISOString() : new Date().toISOString(),
     };
 
