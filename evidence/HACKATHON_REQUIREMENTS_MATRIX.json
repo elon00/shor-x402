@@ -1,0 +1,74 @@
+{
+  "project": "SHOR x402",
+  "asOf": "2026-11-02",
+  "competition": {
+    "name": "Global x402 Challenge",
+    "status": "CLOSED",
+    "closedDate": "2026-10-06",
+    "submissionDeadline": "2026-09-30",
+    "sources": [
+      "https://algorand.co/global-x402-challenge",
+      "https://algorand.co/blog/the-x402-global-challenge-is-live-how-to-build-submit-your-entry",
+      "https://algorand.co/blog/the-global-x402-challenge-winners-are-here"
+    ]
+  },
+  "networks": {
+    "algorandMainnet": {
+      "usdcAsa": 31566704
+    },
+    "algorandTestnet": {
+      "usdcAsa": 10458941
+    }
+  },
+  "requirements": [
+    {
+      "id": "public-https",
+      "status": "PARTIAL",
+      "evidence": "API health HTTP 200 per user log; paid route not independently verified"
+    },
+    {
+      "id": "http-402",
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "facilitator-settlement",
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "bazaar-discovery",
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "tag",
+      "status": "CONFIGURED_NOT_VERIFIED",
+      "value": "x402-global-challenge"
+    },
+    {
+      "id": "payto-usdc",
+      "status": "HISTORIC_AXFER_ONLY"
+    },
+    {
+      "id": "testnet-end-to-end",
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "concurrency-replay",
+      "status": "BLOCKED"
+    },
+    {
+      "id": "pqc-attestation",
+      "status": "BLOCKED"
+    },
+    {
+      "id": "computed-paid-response",
+      "status": "BLOCKED"
+    },
+    {
+      "id": "submission",
+      "status": "UNVERIFIED_DEADLINE_PASSED"
+    }
+  ],
+  "releaseReady": false,
+  "mainnetDeploymentAuthorized": false,
+  "qarbiModified": false
+}
