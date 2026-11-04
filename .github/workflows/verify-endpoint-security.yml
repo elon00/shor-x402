@@ -1,0 +1,29 @@
+name: SHOR verify endpoint security gate
+on:
+  pull_request:
+    paths:
+      - 'netlify/functions/verify.ts'
+      - 'tests/verify-endpoint-security.test.mjs'
+      - '.github/workflows/verify-endpoint-security.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'netlify/functions/verify.ts'
+      - 'tests/verify-endpoint-security.test.mjs'
+      - '.github/workflows/verify-endpoint-security.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/verify-endpoint-security.test.mjs
+      - run: npm run lint
+      - run: npm run build:all
