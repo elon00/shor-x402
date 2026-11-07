@@ -1,0 +1,224 @@
+{
+  "engine": "REA_Reverse_Engineer_Anything",
+  "status": "STRUCTURE_RECONSTRUCTED",
+  "analyzed_files": 72,
+  "manifest": {
+    "index.html": {
+      "bytes": 768
+    },
+    "metadata.json": {
+      "bytes": 343
+    },
+    "netlify.toml": {
+      "bytes": 1250
+    },
+    "package-lock.json": {
+      "bytes": 188608
+    },
+    "package.json": {
+      "bytes": 2009
+    },
+    "QMOOSA_TRUTH_PROTOCOL.md": {
+      "bytes": 417
+    },
+    "README.md": {
+      "bytes": 7194
+    },
+    "reality-gate.mjs": {
+      "bytes": 2500
+    },
+    "REALITY_GATE.md": {
+      "bytes": 2669
+    },
+    "REALITY_MANIFEST.json": {
+      "bytes": 1576
+    },
+    "server.ts": {
+      "bytes": 27385
+    },
+    "THE-CREATOR-GOVERNANCE.md": {
+      "bytes": 860
+    },
+    "THE_CREATOR_RULEBOOK.md": {
+      "bytes": 14140
+    },
+    "tsconfig.json": {
+      "bytes": 427
+    },
+    "vite.config.ts": {
+      "bytes": 574
+    },
+    "x402-bazaar.json": {
+      "bytes": 6498
+    },
+    "docs\\ALGORAND_DEPLOYMENT_QARBI_PARITY_PLAN.md": {
+      "bytes": 5285
+    },
+    "docs\\HACKATHON_OFFICIAL_REQUIREMENTS_2026.md": {
+      "bytes": 6745
+    },
+    "evidence\\EVIDENCE_LEDGER.md": {
+      "bytes": 5361
+    },
+    "evidence\\HACKATHON_REQUIREMENTS_MATRIX.json": {
+      "bytes": 1735
+    },
+    "evidence\\REPRODUCE.md": {
+      "bytes": 2766
+    },
+    "evidence\\X402_SETTLEMENT_FLOW.md": {
+      "bytes": 4266
+    },
+    "public\\_headers": {
+      "bytes": 224
+    },
+    "public\\_redirects": {
+      "bytes": 560
+    },
+    "reality\\URS_EVIDENCE_CERTIFICATE.json": {
+      "bytes": 11641
+    },
+    "reality\\URS_EVIDENCE_CERTIFICATE.md": {
+      "bytes": 2402
+    },
+    "reality\\URS_SCORECARD.json": {
+      "bytes": 2428
+    },
+    "scripts\\audit-crypto.mjs": {
+      "bytes": 7163
+    },
+    "scripts\\check-env.mjs": {
+      "bytes": 493
+    },
+    "scripts\\generate-urs-certificate.ts": {
+      "bytes": 6665
+    },
+    "scripts\\reality-universal.ts": {
+      "bytes": 15682
+    },
+    "scripts\\rea_inspector.py": {
+      "bytes": 1485
+    },
+    "scripts\\rsi_engine.py": {
+      "bytes": 2039
+    },
+    "scripts\\start-and-finish-everything.mjs": {
+      "bytes": 6678
+    },
+    "src\\App.tsx": {
+      "bytes": 23876
+    },
+    "src\\declarations.d.ts": {
+      "bytes": 54
+    },
+    "src\\index.css": {
+      "bytes": 24
+    },
+    "src\\main.tsx": {
+      "bytes": 237
+    },
+    "src\\types.ts": {
+      "bytes": 4202
+    },
+    "tests\\nist-pqc.test.mjs": {
+      "bytes": 4362
+    },
+    "tests\\reality.test.mjs": {
+      "bytes": 7178
+    },
+    "tests\\reality_check_harness.py": {
+      "bytes": 1364
+    },
+    "tests\\verify-endpoint-security.test.mjs": {
+      "bytes": 1134
+    },
+    ".github\\workflows\\algorand-validation.yml": {
+      "bytes": 835
+    },
+    ".github\\workflows\\ci.yml": {
+      "bytes": 1244
+    },
+    ".github\\workflows\\deploy.yml": {
+      "bytes": 1332
+    },
+    ".github\\workflows\\pages.yml": {
+      "bytes": 779
+    },
+    ".github\\workflows\\qmoosa-rsi-rea-sync.yml": {
+      "bytes": 531
+    },
+    ".github\\workflows\\verify-endpoint-security.yml": {
+      "bytes": 815
+    },
+    ".github\\workflows\\x402-portfolio-automation.yml": {
+      "bytes": 1212
+    },
+    "netlify\\functions\\bazaar.ts": {
+      "bytes": 7291
+    },
+    "netlify\\functions\\health.ts": {
+      "bytes": 1315
+    },
+    "netlify\\functions\\shor-execute.ts": {
+      "bytes": 12848
+    },
+    "netlify\\functions\\verify.ts": {
+      "bytes": 7860
+    },
+    "src\\components\\AgentCommandHub.tsx": {
+      "bytes": 22005
+    },
+    "src\\components\\AlgorandExplorerView.tsx": {
+      "bytes": 14449
+    },
+    "src\\components\\ArchitectureDocsModal.tsx": {
+      "bytes": 9238
+    },
+    "src\\components\\ConwayAutomatonView.tsx": {
+      "bytes": 9140
+    },
+    "src\\components\\GodModeOnChainHub.tsx": {
+      "bytes": 20057
+    },
+    "src\\components\\GovernanceView.tsx": {
+      "bytes": 8134
+    },
+    "src\\components\\Header.tsx": {
+      "bytes": 18174
+    },
+    "src\\components\\PqcSecurityView.tsx": {
+      "bytes": 11800
+    },
+    "src\\components\\QrCodeViewer.tsx": {
+      "bytes": 9692
+    },
+    "src\\components\\QuboSolverView.tsx": {
+      "bytes": 16758
+    },
+    "src\\components\\ServiceMarketplaceView.tsx": {
+      "bytes": 31398
+    },
+    "src\\data\\serviceRegistry.ts": {
+      "bytes": 5758
+    },
+    "src\\services\\algorandClient.ts": {
+      "bytes": 3407
+    },
+    "src\\services\\apiClient.ts": {
+      "bytes": 18361
+    },
+    "src\\services\\walletConnector.ts": {
+      "bytes": 5009
+    },
+    "src\\utils\\conwayEngine.ts": {
+      "bytes": 4472
+    },
+    "src\\utils\\pqcCrypto.ts": {
+      "bytes": 6656
+    },
+    "src\\utils\\quboSolver.ts": {
+      "bytes": 6569
+    }
+  },
+  "timestamp": 1794037454
+}
