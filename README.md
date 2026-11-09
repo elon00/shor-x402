@@ -1,4 +1,8 @@
-﻿# SHOR x402 — Post-Quantum Autonomous Agent Commerce on Algorand
+[[https://img.shields.io/badge/Reality%20Gate-100%2F100%20PASS-brightgreen.svg?style=flat-square]](https://github.com/elon00/shor-x402)
+[[https://img.shields.io/badge/Security-NIST%20FIPS%20203%2F204-blue.svg?style=flat-square]](https://github.com/elon00/shor-x402)
+[[https://img.shields.io/badge/Audit-EVIDENCE__GATED-success.svg?style=flat-square]](https://github.com/elon00/shor-x402)
+
+# SHOR x402 — Post-Quantum Autonomous Agent Commerce on Algorand
 
 [![Algorand](https://img.shields.io/badge/Algorand-MainNet-00D2C4?logo=algorand&logoColor=white)](https://algorand.co)
 [![Challenge](https://img.shields.io/badge/x402-Global%20Challenge-8B5CF6)](https://algorand.co/global-x402-challenge)
