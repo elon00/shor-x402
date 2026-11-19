@@ -1,0 +1,1 @@
+{"sites":[{"slug":"shor-x402-web3","distDir":"dist","buildCommand":"npm ci && npm run build"}],"ipfs":{"pinning":true,"gateway":"https://ipfs.io/ipfs/"}}
