@@ -1,0 +1,26 @@
+name: Web3 validation
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run lint
+      - run: npm run test:web3
+      - run: npm run test:nist
+      - run: npm run test:adversarial
+      - run: npm run build
+      - run: npm run build:server
+      - run: npm run build:functions
+      - run: npm run test:netlify
+      - run: npm run test:http
+      - run: npm audit --audit-level=high

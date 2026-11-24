@@ -1,0 +1,24 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { randomBytes } from 'node:crypto';
+import { claimHash } from '../src/security/payment-claims.mjs';
+import { claimSettledPayment } from '../src/security/durable-settlement.mjs';
+const base = {network:'algorand:wGHE2pwdvd7S12BL5Fa+PRx3TF3QXDYODnakNVUtvpU=',assetId:31566704,recipient:'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM',amountMicro:5000,resource:'/api/v1/shor/execute',nonce:randomBytes(32).toString('hex'),expiresAt:Date.now()+120000};
+const txId='A'.repeat(52);
+const proof={verified:true,settled:true,txId,network:base.network,challengeHash:claimHash(base)};
+const verifySettlement=async () => true;
+const pool={connect:async()=>({query:async()=>{throw Error('DB unexpectedly called')},release(){}})};
+test('rejects untrusted verification callbacks',async()=>{await assert.rejects(claimSettledPayment(pool,{expected:base,supplied:base,txId,settlementProof:proof}),/trusted facilitator verifier/)});
+test('rejects failed facilitator verification',async()=>{await assert.rejects(claimSettledPayment(pool,{expected:base,supplied:base,txId,settlementProof:proof,verifySettlement:async()=>false}),/authentication failed/)});
+test('rejects unsigned/unauthenticated settlement metadata before DB',async()=>{await assert.rejects(claimSettledPayment(pool,{expected:base,supplied:base,txId,settlementProof:null,verifySettlement}),/evidence/)});
+test('rejects mismatched challenge before DB',async()=>{await assert.rejects(claimSettledPayment(pool,{expected:base,supplied:{...base,amountMicro:9000},txId,settlementProof:proof,verifySettlement}),/mismatch/)});
+test('rejects wrong transaction ID before DB',async()=>{await assert.rejects(claimSettledPayment(pool,{expected:base,supplied:base,txId:'bad',settlementProof:proof,verifySettlement}),/transaction ID/)});
+test('rejects mismatch to settlement hash before DB',async()=>{await assert.rejects(claimSettledPayment(pool,{expected:base,supplied:base,txId,settlementProof:{...proof,challengeHash:'0'.repeat(64)},verifySettlement}),/evidence/)});
+test('rejects expired challenge before DB',async()=>{await assert.rejects(claimSettledPayment(pool,{expected:{...base,expiresAt:1},supplied:{...base,expiresAt:1},txId,settlementProof:proof,verifySettlement}),/expired/)});
+test('atomic INSERT uses ON CONFLICT and is single-use according to database rowCount',async()=>{
+ const calls=[];let n=0;
+ const fake={connect:async()=>({query:async(sql)=>{calls.push(sql);if(sql.startsWith('INSERT'))return {rowCount:n++===0?1:0,rows:n===1?[{id:42}]:[]};return {rowCount:0,rows:[]}},release(){}})};
+ assert.equal((await claimSettledPayment(fake,{expected:base,supplied:base,txId,settlementProof:proof,verifySettlement})).claimed,true);
+ assert.equal((await claimSettledPayment(fake,{expected:base,supplied:base,txId,settlementProof:proof,verifySettlement})).claimed,false);
+ assert.ok(calls.some(x=>x.includes('ON CONFLICT DO NOTHING RETURNING id')));
+});

@@ -1,6 +1,6 @@
 {
   "system": "SHOR-x402",
-  "timestamp": "2026-09-07T11:41:23.811Z",
+  "timestamp": "2026-11-03T17:11:24.289Z",
   "gatesPassed": 10,
   "totalGates": 10,
   "score": 10,
@@ -45,7 +45,7 @@
       "name": "x402 Dual Hybrid Payment Conjunction & Fail-Closed Defense",
       "passed": true,
       "score": 1,
-      "details": "Dual Hybrid Conjunction holds; unauthenticated attempts fail-closed"
+      "details": "Local signature binding positive and negative checks passed; no live payment checked"
     },
     {
       "gate": 7,

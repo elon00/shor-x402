@@ -1,0 +1,60 @@
+#pragma version 8
+// Optional creator-only public receipt pointer. Does not verify x402 payments.
+// No custody, update, delete, local state, or inner transactions.
+txn RekeyTo
+global ZeroAddress
+==
+assert
+txn OnCompletion
+int NoOp
+==
+assert
+txn ApplicationID
+int 0
+==
+bnz create
+txn Sender
+global CreatorAddress
+==
+assert
+txn NumAppArgs
+int 3
+==
+assert
+txna ApplicationArgs 0
+byte "anchor"
+==
+assert
+txna ApplicationArgs 1
+len
+int 32
+==
+assert
+txna ApplicationArgs 2
+len
+int 46
+>=
+assert
+txna ApplicationArgs 2
+len
+int 100
+<=
+assert
+byte "result_hash"
+txna ApplicationArgs 1
+app_global_put
+byte "cid"
+txna ApplicationArgs 2
+app_global_put
+int 1
+return
+create:
+txn NumAppArgs
+int 0
+==
+assert
+byte "schema"
+int 1
+app_global_put
+int 1
+return

@@ -155,6 +155,10 @@ export interface PqcKeyPair {
 }
 
 export interface WalletState {
+  sessionStatus?: 'disconnected' | 'watching' | 'connecting' | 'connected' | 'error';
+  balanceStatus?: 'unknown' | 'fresh' | 'unavailable';
+  ownershipProven?: false;
+  sessionMessage?: string;
   address: string;
   algoBalance: number;
   usdcBalance: number;

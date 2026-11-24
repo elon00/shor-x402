@@ -1,3 +1,7 @@
+> Current release status (19 November 2026): development. Paid execution is on SECURITY_HOLD. IPFS storage, Fleek frontend preparation, QuickNode EVM connectivity and unsigned Algorand contract preparation are documented in [Web3 architecture](docs/WEB3_ARCHITECTURE.md). Run npm run web3:check for evidence. The historical deployment/transaction claims below do not certify the current checkout.
+
+> **Current development status — 19 November 2026:** Paid execution remains on SECURITY_HOLD. Netlify is the selected host, independent IPFS storage is implemented but needs provider configuration, and QuickNode is optional for supported EVM testnets. The new Algorand receipt contract is compiled, not deployed. Earlier LIVE/ACTIVE claims below are historical assertions and are not current release evidence. See [the Web3 architecture and 100-point acceptance rubric](docs/WEB3_ARCHITECTURE.md). Run `npm run web3:check` for the current evidence report. Node.js 24 or newer is required for these checks.
+
 ﻿# SHOR x402 — Post-Quantum Autonomous Agent Commerce on Algorand
 
 [![Algorand](https://img.shields.io/badge/Algorand-MainNet-00D2C4?logo=algorand&logoColor=white)](https://algorand.co)

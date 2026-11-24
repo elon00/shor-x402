@@ -4,7 +4,7 @@ const OFFICIAL_RECIPIENT_ADDRESS = 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQ
 const USDC_ASA_MAINNET = 31566704;
 const MINIMUM_REQUIRED_USDC = 0.005; // 0.005 USDC = 5,000 micro-USDC
 const CHALLENGE_TAG = 'x402-global-challenge';
-const CAIP2_MAINNET = 'algorand:wGHE2pwdvd7S12BL5Fa+PRx3TF3QXDYODnakNVUtvpU=';
+const CAIP2_MAINNET = 'algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73k';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -31,7 +31,8 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
   }
 
   const txId = (body.transactionId || body.txId || event.queryStringParameters?.txId || '').trim();
-  const minAmount = Number(body.minAmountUsdc || event.queryStringParameters?.minAmountUsdc || MINIMUM_REQUIRED_USDC);
+  // Never accept client-controlled threshold below the official required minimum (0.005 USDC)
+  const minAmount = Math.max(MINIMUM_REQUIRED_USDC, Number(body.minAmountUsdc || event.queryStringParameters?.minAmountUsdc || MINIMUM_REQUIRED_USDC));
 
   if (!txId) {
     return {
@@ -183,7 +184,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       verified: true,
       status: 'settled',
       scheme: 'x402-algo',
-      facilitator: 'https://x402.goplausible.xyz',
+      facilitator: 'https://facilitator.goplausible.xyz',
       challengeTag: CHALLENGE_TAG,
       network: CAIP2_MAINNET,
       asset: 'USDC',
@@ -196,7 +197,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       confirmedRound,
       roundTime: tx['round-time'],
       explorerUrl: `https://allo.info/tx/${txId}`,
-      pqcAttestation: 'STANDARDIZED_HYBRID_ED25519_VERIFIED',
+      pqcAttestation: 'NOT_VERIFIED_BY_PAYMENT_INDEXER',
       timestamp: tx['round-time'] ? new Date(tx['round-time'] * 1000).toISOString() : new Date().toISOString(),
     };
 

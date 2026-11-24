@@ -1,14 +1,14 @@
-name: CI & Build Verification
+name: CI & Technical Reality Verification
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, 'repair/**' ]
   pull_request:
     branches: [ main, master ]
 
 jobs:
   build-and-test:
-    name: Build & TypeScript Typecheck
+    name: Typecheck, Security Tests & Reality Verification
     runs-on: ubuntu-latest
 
     strategy:
@@ -26,16 +26,28 @@ jobs:
           cache: 'npm'
 
       - name: Install Dependencies
-        run: npm ci || npm install --legacy-peer-deps
+        run: npm ci
 
       - name: TypeScript Static Typecheck
         run: npm run lint
 
-      - name: Automated Reality Gate Audit
-        run: npm run reality:gate
+      - name: Automated Unit & Reality Tests
+        run: npm test
 
-      - name: Automated On-Chain Verification Tests
-        run: npm run test
+      - name: NIST FIPS 203/204 Post-Quantum Tests
+        run: npm run test:nist
+
+      - name: Adversarial Security & Replay Attacks Regression
+        run: npm run test:adversarial
+
+      - name: Standalone Cryptographic Auditor
+        run: npm run audit:crypto
+
+      - name: Universal Reality System (URS v1.0) Execution
+        run: npm run reality:universal
+
+      - name: Algorand TestNet Staging Preflight
+        run: npm run testnet:preflight
 
       - name: Production Bundle Build (Vite & Server)
         run: npm run build:all

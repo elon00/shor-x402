@@ -1,7 +1,7 @@
-import { PqcKeyPair } from '../types';
+import type { PqcKeyPair } from '../types.js';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem.js';
 import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js';
-import { sha256 } from '@noble/hashes/sha256.js';
+import { sha256 } from '@noble/hashes/sha2.js';
 import { hkdf } from '@noble/hashes/hkdf.js';
 
 export function bytesToHex(bytes: Uint8Array): string {
@@ -118,26 +118,18 @@ export function createPqcHybridSignature(
   const messageBytes = encoder.encode(payload);
 
   const stored = activeKeyStorage.get(keyPair.keyId);
-  let dsaSigHex = '';
-
-  if (stored) {
-    const sig = ml_dsa65.sign(messageBytes, stored.secretKey);
-    dsaSigHex = bytesToHex(sig);
-  } else {
-    // Deterministic fallback signing key derived from fingerprint
-    const seed = sha256(encoder.encode(keyPair.publicKeyFingerprint));
-    const fallbackPair = ml_dsa65.keygen(seed);
-    const sig = ml_dsa65.sign(messageBytes, fallbackPair.secretKey);
-    dsaSigHex = bytesToHex(sig);
+  if (!stored || stored.publicKey.length !== 1952 || stored.secretKey.length !== 4032) {
+    throw new Error('ML-DSA-65 signing key unavailable or invalid; refusing fallback');
   }
-
-  const classicalDigest = bytesToHex(sha256(messageBytes)).substring(0, 32);
-
+  const signature = ml_dsa65.sign(messageBytes, stored.secretKey);
+  const signatureHex = bytesToHex(signature);
+  const digest = bytesToHex(sha256(messageBytes));
   return {
-    hybridSignature: `PQC-HYBRID-x402.${classicalDigest}.${dsaSigHex.substring(0, 64)}`,
-    mlDsaComponent: dsaSigHex,
-    ed25519Component: `ED25519-SIG-${classicalDigest}`,
-    verificationProof: `NIST_FIPS_204_ML_DSA_65_AUTHENTICATED_${keyPair.publicKeyFingerprint}`,
+    hybridSignature: `PQC-HYBRID-x402.${digest}.${signatureHex}`,
+    mlDsaComponent: signatureHex,
+    // No Ed25519 signature is produced by this operation.
+    ed25519Component: '',
+    verificationProof: `ML_DSA_65_SIGNATURE_GENERATED_${keyPair.publicKeyFingerprint}`,
     quantumResistanceScore: 1.0,
   };
 }
@@ -157,40 +149,30 @@ export function verifyPqcSignature(
   const messageBytes = encoder.encode(payload);
 
   try {
-    let isValid = false;
-    let sigBytes: Uint8Array | null = null;
-
-    if (signature.length >= 6618) {
-      // Direct raw 3,309-byte hex
-      sigBytes = hexToBytes(signature);
-    } else {
-      // Look up in active storage or check signature format
-      sigBytes = null;
-    }
-
-    if (sigBytes && sigBytes.length === 3309 && publicKey.length === 3904) {
-      isValid = ml_dsa65.verify(sigBytes, messageBytes, hexToBytes(publicKey));
-    } else if (signature.startsWith('PQC-HYBRID-x402.')) {
+    if (!/^[0-9a-fA-F]{3904}$/.test(publicKey)) throw new Error('Invalid ML-DSA-65 public key');
+    let rawSignature = signature;
+    if (signature.startsWith('PQC-HYBRID-x402.')) {
       const parts = signature.split('.');
-      if (parts.length === 3) {
-        const expectedDigest = bytesToHex(sha256(messageBytes)).substring(0, 32);
-        isValid = parts[1] === expectedDigest;
-      }
+      if (parts.length !== 3 || !/^[0-9a-fA-F]{64}$/.test(parts[1])) throw new Error('Invalid envelope');
+      const actualDigest = bytesToHex(sha256(messageBytes));
+      if (parts[1].toLowerCase() !== actualDigest) throw new Error('Invalid digest');
+      rawSignature = parts[2];
     }
-
+    if (!/^[0-9a-fA-F]{6618}$/.test(rawSignature)) throw new Error('Invalid ML-DSA-65 signature length');
+    const valid = ml_dsa65.verify(hexToBytes(rawSignature), messageBytes, hexToBytes(publicKey));
     return {
-      valid: isValid,
+      valid,
       algorithm: 'NIST FIPS 204 ML-DSA-65',
-      specification: 'Pure TypeScript lattice-based digital signature algorithm conforming to NIST FIPS 204',
-      signatureDigestMatch: isValid,
-      latticeVerificationTimeUs: 124,
-      securityBits: 192,
+      specification: 'ML-DSA-65 signature verification',
+      signatureDigestMatch: valid,
+      latticeVerificationTimeUs: 0,
+      securityBits: 0,
     };
   } catch {
     return {
       valid: false,
       algorithm: 'NIST FIPS 204 ML-DSA-65',
-      specification: 'Signature verification aborted (fail-closed)',
+      specification: 'Invalid signature (fail-closed)',
       signatureDigestMatch: false,
       latticeVerificationTimeUs: 0,
       securityBits: 0,

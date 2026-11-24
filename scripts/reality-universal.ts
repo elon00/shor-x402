@@ -17,7 +17,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert';
 import { hkdf } from '@noble/hashes/hkdf.js';
-import { sha256 } from '@noble/hashes/sha256.js';
+import { sha256 } from '@noble/hashes/sha2.js';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem.js';
 import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js';
 import {
@@ -166,14 +166,21 @@ try {
   const keyPair = generatePqcKeyPair('ML-DSA-65');
   const sig = createPqcHybridSignature('RQSQ6LBTNQEGROLRSKRCJPLVLUD6JOGAVY3QUTDDYGYBBHGAKDSA', keyPair, 0.005, 'srv-quantum-ai');
   assert.strictEqual(sig.quantumResistanceScore, 1.0);
-  assert.ok(sig.verificationProof.includes('NIST_FIPS_204_ML_DSA_65_AUTHENTICATED'));
+  // A signature-generation label is not authentication evidence.
+  // Verify the full 3309-byte ML-DSA-65 signature against the exact bound payload.
+  const txId = 'RQSQ6LBTNQEGROLRSKRCJPLVLUD6JOGAVY3QUTDDYGYBBHGAKDSA';
+  assert.strictEqual(sig.mlDsaComponent.length, 6618);
+  assert.strictEqual(verifyPqcSignature(sig.hybridSignature, txId, keyPair.publicKey, 0.005, 'srv-quantum-ai').valid, true);
+  assert.strictEqual(verifyPqcSignature(sig.hybridSignature, txId + 'X', keyPair.publicKey, 0.005, 'srv-quantum-ai').valid, false);
+  assert.strictEqual(verifyPqcSignature(sig.hybridSignature, txId, keyPair.publicKey, 0.006, 'srv-quantum-ai').valid, false);
+  assert.strictEqual(verifyPqcSignature(sig.hybridSignature, txId, keyPair.publicKey, 0.005, 'wrong-service').valid, false);
 
   gates.push({
     gate: 6,
     name: 'x402 Dual Hybrid Payment Conjunction & Fail-Closed Defense',
     passed: true,
     score: 1.0,
-    details: 'Dual Hybrid Conjunction holds; unauthenticated attempts fail-closed'
+    details: 'Local signature binding positive and negative checks passed; no live payment checked'
   });
   console.log('▶ [URS GATE 6/10] x402 Dual Hybrid Payment Conjunction & Fail-Closed Defense');
   console.log('  ✅ Dual Hybrid Conjunction holds; unauthenticated attempts fail-closed\n');

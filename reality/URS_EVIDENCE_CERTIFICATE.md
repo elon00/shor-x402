@@ -1,9 +1,9 @@
 # ⚛️ Shor-x402 — Universal Reality Evidence Certificate
 
-**Sealed Timestamp**: `2026-09-07T11:41:23.911Z`  
-**Master Reality Hash (SHA-256)**: `f4f94668538542494eb4aaf4a0413b2f2491c8d16b5ae9dd52259a774c942f8f`  
+**Sealed Timestamp**: `2026-11-03T09:06:57.543Z`  
+**Master Reality Hash (SHA-256)**: `a32ba77e1cca1b6bcef6325901b3cb2b868d1ff36144766232e3fbc66281e4b8`  
 **NIST FIPS 204 ML-DSA-65 Cert Signature**:  
-`dca423736b6de873b166812ca4ad8dd096f1f0dd6fdd0dba30c9f470a5773627a1d346d02600b945fee374c8e29e6ee7...`
+`bc17dfc32a3f244cd5b849572f1ff02fb6ecd8e668c8c391fe41da4c16c086405e999fd8ac8af2f3e825b83ce49eb30e...`
 
 ---
 

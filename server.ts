@@ -1,10 +1,13 @@
 import express from 'express';
+import { infrastructureHealth } from './src/infrastructure/health.mjs';
+import { handleReceiptStorage } from './src/infrastructure/storage-handler.mjs';
 import path from 'path';
 import crypto from 'node:crypto';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
-import { createPqcHybridSignature } from './src/utils/pqcCrypto.js';
+import { createPqcHybridSignature, verifyPqcSignature } from './src/utils/pqcCrypto.js';
+import { runConway, solveQubo } from './src/engines/paid-computation.mjs';
 
 dotenv.config();
 
@@ -24,8 +27,8 @@ if (geminiApiKey) {
 
 // Official CAIP-2 Network Identifiers for Algorand
 export const CAIP2_NETWORKS = {
-  mainnet: 'algorand:wGHE2pwdvd7S12BL5Fa+PRx3TF3QXDYODnakNVUtvpU=',
-  testnet: 'algorand:SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=',
+  mainnet: 'algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73k',
+  testnet: 'algorand:SGO1GKSzyE7IEPItTxCByw9x8FmnrCDe',
 };
 
 // Official USDC Asset IDs on Algorand
@@ -35,11 +38,13 @@ export const USDC_ASA_IDS = {
 };
 
 const OFFICIAL_RECIPIENT_ADDRESS = 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM';
-const GOPLAUSIBLE_FACILITATOR_URL = 'https://x402.goplausible.xyz';
+const GOPLAUSIBLE_FACILITATOR_URL = 'https://facilitator.goplausible.xyz';
 const GLOBAL_CHALLENGE_TAG = 'x402-global-challenge';
 
-// In-Memory Replay Protection Cache
-const USED_TX_CACHE = new Set<string>();
+// Durable Settlement Ledger Integration Note:
+// Cross-instance replay prevention requires PostgreSQL durable settlement (shor_payment_claims table).
+// In-memory process cache acts strictly as an intra-process secondary defense.
+const LOCAL_PROCESS_USED_TX = new Set<string>();
 
 interface OnChainVerificationResult {
   verified: boolean;
@@ -65,7 +70,7 @@ async function verifyAlgorandPaymentOnChain(txId: string, minAmountUsdc: number 
   }
 
   // Prevent Replay Attacks
-  if (USED_TX_CACHE.has(cleanTxId)) {
+  if (LOCAL_PROCESS_USED_TX.has(cleanTxId)) {
     return { verified: false, error: 'Replay Protection: This transaction hash has already been claimed.' };
   }
 
@@ -143,7 +148,7 @@ async function verifyAlgorandPaymentOnChain(txId: string, minAmountUsdc: number 
     }
 
     // Mark as used in replay protection cache
-    USED_TX_CACHE.add(cleanTxId);
+    LOCAL_PROCESS_USED_TX.add(cleanTxId);
 
     return {
       verified: true,
@@ -179,24 +184,35 @@ async function startServer() {
     next();
   });
 
-  // Health check
+  // All legacy paid routes remain closed until the durable x402 flow is verified.
+  app.use('/api', (req, res, next) => {
+    const proof = req.headers['x-402-proof'];
+    const authorization = req.headers.authorization || '';
+    if (proof || /^x402/i.test(authorization) ||
+        ['/v1/x402/verify', '/x402/verify-payment'].includes(req.path)) {
+      return res.status(503).json({ status: 'SECURITY_HOLD',
+        error: 'Paid execution and legacy receipt verification are disabled pending signed settlement and durable replay validation.' });
+    }
+    next();
+  });
+
+  app.post('/api/v1/storage/receipts', async (req, res) => {
+    const result = await handleReceiptStorage({ authorization: req.headers.authorization, body: req.body });
+    res.setHeader('Cache-Control', 'no-store');
+    res.status(result.status).json(result.body);
+  });
+
+  // Process health is separate from live chain/provider evidence.
   app.get('/api/health', (req, res) => {
-    res.json({
-      status: 'healthy',
-      service: 'SHOR x402 Post-Quantum Autonomous Agent Commerce Hub',
-      network: CAIP2_NETWORKS.mainnet,
-      settlementAsset: 'USDC (ASA 31566704)',
-      payToAddress: OFFICIAL_RECIPIENT_ADDRESS,
-      facilitator: GOPLAUSIBLE_FACILITATOR_URL,
-      challengeTag: GLOBAL_CHALLENGE_TAG,
-      pqcStandard: 'NIST FIPS 204 (ML-DSA-65) & FIPS 203 (ML-KEM-768)',
-      geminiConnected: !!geminiApiKey,
-      timestamp: new Date().toISOString(),
-    });
+    res.setHeader('Cache-Control', 'no-store');
+    res.json(infrastructureHealth());
   });
 
   // --- Bazaar Machine-Readable Service Discovery Extension ---
   const bazaarDiscoveryPayload = {
+    status: 'SECURITY_HOLD',
+    available: false,
+    scope: 'Project index only; not proof of Bazaar registration or available paid services',
     x402Version: '1.0.0',
     version: '1.0.0',
     name: 'SHOR x402 — Post-Quantum Autonomous Agent Commerce Hub',
@@ -229,25 +245,7 @@ async function startServer() {
       pqcSpecification: 'NIST FIPS 204 (ML-DSA-65) & FIPS 203 (ML-KEM-768)',
       challengeTag: GLOBAL_CHALLENGE_TAG,
     },
-    resources: [
-      {
-        resource: '/api/v1/shor/execute',
-        name: 'SHOR Autonomous Agent Orchestrator',
-        type: 'http',
-        method: 'POST',
-        costUsdc: 0.005,
-        pricing: { costUsdc: 0.005, amount: '0.005000', currency: 'USDC', assetId: USDC_ASA_IDS.mainnet },
-        caip2: CAIP2_NETWORKS.mainnet,
-        payTo: OFFICIAL_RECIPIENT_ADDRESS,
-        facilitator: GOPLAUSIBLE_FACILITATOR_URL,
-        description: 'Autonomous task planning, QUBO service optimization, and x402 USDC micro-settlement pipeline.',
-      },
-      { resource: '/api/services/weather', name: 'Planetary Radar & Hyperlocal Weather API', costUsdc: 0.002, path: '/api/services/weather' },
-      { resource: '/api/services/quantum-inference', name: 'Quantum-Assisted Neural Inference Engine', costUsdc: 0.015, path: '/api/services/quantum-inference' },
-      { resource: '/api/services/satellite-compute', name: 'Distributed Orbital Compute & GIS Matrix Engine', costUsdc: 0.05, path: '/api/services/satellite-compute' },
-      { resource: '/api/services/market-depth', name: 'Institutional Macro & Cross-Chain Liquidity Feed', costUsdc: 0.008, path: '/api/services/market-depth' },
-      { resource: '/api/services/pqc-entropy', name: 'True Quantum Entropy Seed Generator', costUsdc: 0.001, path: '/api/services/pqc-entropy' },
-    ],
+    resources: [],
   };
 
   app.get('/.well-known/x402-bazaar.json', (req, res) => {
@@ -326,6 +324,14 @@ async function startServer() {
       return sendX402Challenge(res, 'srv-shor-orchestrator', 0.005);
     }
 
+    // SECURITY HOLD: A confirmed historical payment alone cannot authorize a
+    // new request. A durable atomic claim journal and challenge binding are required.
+    return res.status(503).json({
+      status: 'SECURITY_HOLD',
+      reason: 'Paid execution disabled until durable challenge-bound replay protection and verified runtime attestation are implemented',
+      charged: false,
+    });
+
     // Perform REAL On-Chain Indexer Verification
     const verification = await verifyAlgorandPaymentOnChain(candidateTxId, 0.005);
 
@@ -344,13 +350,55 @@ async function startServer() {
     const { goal } = req.body || {};
     const userGoal = goal || 'Optimize high-throughput post-quantum service selection and execute settlement.';
 
+    // Real Input-Derived Conway Computation (deterministic 8x8 seed if not provided)
+    const goalHash = crypto.createHash('sha256').update(userGoal).digest();
+    const defaultGrid = Array.from({ length: 8 }, (_, r) =>
+      Array.from({ length: 8 }, (_, c) => (goalHash[(r * 8 + c) % 32] % 2 === 1 ? 1 : 0))
+    );
+    const inputGrid = Array.isArray(req.body?.conwayGrid) ? req.body.conwayGrid : defaultGrid;
+    const computedGrid = runConway(inputGrid, 3);
+    let activeCells = 0;
+    for (const row of computedGrid) for (const cell of row) if (cell === 1) activeCells++;
+
+    // Real Bounded QUBO Computation (at most 20 variables, classical exact solver)
+    const defaultQubo = [
+      [-1.2, 0.4, 0.2, 0.1],
+      [0.4, -0.9, 0.3, 0.2],
+      [0.2, 0.3, -1.5, 0.2],
+      [0.1, 0.2, 0.2, -0.7],
+    ];
+    const inputMatrix = Array.isArray(req.body?.quboMatrix) ? req.body.quboMatrix : defaultQubo;
+    const quboResult = solveQubo(inputMatrix);
+
+    // Real PQC Attestation: Authenticate when supplied; never claim fabricated PQC verification
+    const pqcSigHeader = (req.headers['x-pqc-signature'] as string) || '';
+    const pqcPubHeader = (req.headers['x-pqc-public-key'] as string) || '';
+    let pqcVerification = {
+      algorithm: 'NIST FIPS 204 (ML-DSA-65)',
+      status: 'NOT_PROVIDED',
+      signatureHex: null as string | null,
+      verified: false,
+      specification: 'No authentic ML-DSA-65 signature provided with request',
+    };
+
+    if (pqcSigHeader && pqcPubHeader) {
+      const pRes = verifyPqcSignature(pqcSigHeader, verification.txId || '', pqcPubHeader, verification.amountUsdc || 0.005);
+      pqcVerification = {
+        algorithm: 'NIST FIPS 204 (ML-DSA-65)',
+        status: pRes.valid ? 'ML_DSA_65_VERIFIED' : 'ML_DSA_65_INVALID',
+        signatureHex: pqcSigHeader,
+        verified: pRes.valid,
+        specification: pRes.valid ? 'Authentic NIST FIPS 204 ML-DSA-65 signature verified' : 'NIST FIPS 204 ML-DSA-65 signature failed verification',
+      };
+    }
+
     res.json({
       statusCode: 200,
       status: 'success',
       service: 'SHOR x402 Post-Quantum Autonomous Agent Orchestrator',
       challengeTag: GLOBAL_CHALLENGE_TAG,
       settlementReceipt: {
-        verifiedVia: 'Algorand MainNet Indexer & GoPlausible Facilitator',
+        verifiedVia: 'Algorand MainNet Indexer',
         onChainVerification: 'VERIFIED_ON_CHAIN_MAINNET',
         orchestratorFeeUsdc: verification.amountUsdc,
         settlementAsset: 'USDC',
@@ -364,26 +412,21 @@ async function startServer() {
       },
       conwayAutomatonState: {
         finalState: 'S10_COMPLETE',
-        activeCells: 142,
-        shannonEntropy: 0.884,
+        activeCells,
+        gridDimensions: `${computedGrid.length}x${computedGrid[0]?.length || 0}`,
         stateTransitions: [
           'S0_IDLE', 'S1_OBSERVE', 'S2_PLAN', 'S3_DISCOVER', 'S4_EVALUATE',
           'S5_AUTHORIZE', 'S6_PAY', 'S7_EXECUTE', 'S8_VERIFY', 'S10_COMPLETE'
         ],
       },
       quboOptimizationResult: {
-        hamiltonianEnergy: -3.841,
-        selectedService: 'Optimal Post-Quantum Service Cluster',
-        solverMethod: 'Classical QUBO Simulated Annealing (Combinatorial Optimization)',
-        variablesEvaluated: 5,
+        hamiltonianEnergy: quboResult.energy,
+        optimalBits: quboResult.bits,
+        selectedService: 'Optimal Classical QUBO Service Cluster',
+        solverMethod: 'Classical QUBO Combinatorial Optimization (Exhaustive Classical CPU - Not Physical Quantum Hardware)',
+        variablesEvaluated: inputMatrix.length,
       },
-      pqcCryptographicAttestation: {
-        algorithm: 'Hybrid-Ed25519-PQC (NIST FIPS 204 Specification)',
-        status: 'STANDARDIZED_HYBRID_ED25519_VERIFIED',
-        signatureHex: req.headers['x-pqc-signature'] || '3a88f1c09b7762d854e1903fa64344e1837b2d5849cf2436894c2538112e4f71a0694e22591e1d35508a287bfba99b24',
-        verified: true,
-        verificationLatencyUs: 28.4,
-      },
+      pqcCryptographicAttestation: pqcVerification,
       executionResult: {
         objective: userGoal,
         summary: `Successfully executed autonomous orchestration pipeline. Verified on-chain USDC payment (${verification.amountUsdc} USDC on round ${verification.confirmedRound}) via Algorand MainNet.`,
@@ -394,14 +437,18 @@ async function startServer() {
 
   // --- Facilitator Verification & Settlement Proxy (/api/v1/x402/verify) ---
   app.post(['/api/v1/x402/verify', '/api/x402/verify-payment'], async (req, res) => {
-    const { transactionId, txId, minAmountUsdc = 0.005 } = req.body || {};
+    const { transactionId, txId, minAmountUsdc } = req.body || {};
     const candidateTxId = (transactionId || txId || '').trim();
 
     if (!candidateTxId) {
       return res.status(400).json({ verified: false, error: 'Missing required transactionId.' });
     }
 
-    const verification = await verifyAlgorandPaymentOnChain(candidateTxId, Number(minAmountUsdc));
+    // Never accept a client-controlled threshold lower than the official required minimum (0.005 USDC)
+    const REQUIRED_MIN_AMOUNT_USDC = 0.005;
+    const effectiveMinAmount = Math.max(REQUIRED_MIN_AMOUNT_USDC, Number(minAmountUsdc) || REQUIRED_MIN_AMOUNT_USDC);
+
+    const verification = await verifyAlgorandPaymentOnChain(candidateTxId, effectiveMinAmount);
 
     if (!verification.verified) {
       return res.status(400).json({
@@ -429,7 +476,7 @@ async function startServer() {
       confirmedRound: verification.confirmedRound,
       roundTime: verification.roundTime,
       explorerUrl: `https://allo.info/tx/${verification.txId}`,
-      pqcAttestation: 'STANDARDIZED_HYBRID_ED25519_VERIFIED',
+      pqcAttestation: 'NOT_VERIFIED_BY_PAYMENT_INDEXER',
       timestamp: verification.roundTime ? new Date(verification.roundTime * 1000).toISOString() : new Date().toISOString(),
     });
   });
@@ -445,7 +492,7 @@ async function startServer() {
     res.json({
       status: 'success',
       service: 'Planetary Radar & Hyperlocal Weather API',
-      receipt: { verifiedVia: 'Algorand-MainNet-USDC', txId: verification.txId, costUsdc: 0.002, pqcVerified: true },
+      receipt: { verifiedVia: 'Algorand-MainNet-USDC', txId: verification.txId, costUsdc: 0.002, pqcVerified: false, pqcAttestation: 'NOT_VERIFIED_ON_INDEXER_LOOKUP' },
       telemetry: {
         location: 'Global Geospatial Grid 48.8566° N, 2.3522° E',
         timestamp: new Date().toISOString(),
@@ -466,15 +513,15 @@ async function startServer() {
 
     res.json({
       status: 'success',
-      service: 'Quantum-Assisted Neural Inference Engine [Research Benchmark]',
-      receipt: { verifiedVia: 'Algorand-MainNet-USDC', txId: verification.txId, costUsdc: 0.015, pqcVerified: true },
+      service: 'Classical QUBO Optimization Engine (Classical Simulation - Not Physical Quantum Hardware)',
+      receipt: { verifiedVia: 'Algorand-MainNet-USDC', txId: verification.txId, costUsdc: 0.015, pqcVerified: false, pqcAttestation: 'NOT_VERIFIED_ON_INDEXER_LOOKUP' },
       inference: {
-        modelArchitecture: 'Classical QUBO-Parameterized Variational Simulation',
+        modelArchitecture: 'Classical QUBO-Parameterized Variational Simulation (Classical CPU)',
         tensorContractionTimeMs: 14.8,
         optimalSpinState: [1, 0, 1, 1, 0, 1, 0, 0],
         groundStateEnergyExpectation: -4.8921,
         fidelityScore: 0.9972,
-        postQuantumCertificate: 'HYBRID-ED25519-PQC-BENCHMARK',
+        postQuantumCertificate: 'CLASSICAL_OPTIMIZATION_BENCHMARK',
       },
     });
   });
@@ -489,12 +536,12 @@ async function startServer() {
     res.json({
       status: 'success',
       service: 'Distributed Orbital Compute & GIS Matrix Engine',
-      receipt: { verifiedVia: 'Algorand-MainNet-USDC', txId: verification.txId, costUsdc: 0.05, pqcVerified: true },
+      receipt: { verifiedVia: 'Algorand-MainNet-USDC', txId: verification.txId, costUsdc: 0.05, pqcVerified: false, pqcAttestation: 'NOT_VERIFIED_ON_INDEXER_LOOKUP' },
       gisComputation: {
         orbitalPassId: 'SENTINEL-SAR-2026-X8',
         pointsProcessed: 14500000,
         matrixDecompositionTimeSec: 0.48,
-        pqcAttestation: 'HYBRID-ED25519-VERIFIED',
+        pqcAttestation: 'PQC_SIGNATURE_OPTIONAL_NOT_SUPPLIED',
       },
     });
   });
@@ -509,12 +556,12 @@ async function startServer() {
     res.json({
       status: 'success',
       service: 'Institutional Macro & Cross-Chain Liquidity Feed',
-      receipt: { verifiedVia: 'Algorand-MainNet-USDC', txId: verification.txId, costUsdc: 0.008, pqcVerified: true },
+      receipt: { verifiedVia: 'Algorand-MainNet-USDC', txId: verification.txId, costUsdc: 0.008, pqcVerified: false, pqcAttestation: 'NOT_VERIFIED_ON_INDEXER_LOOKUP' },
       marketData: {
         algoUsdcDexSpreadBps: 2.1,
         aggregateLiquidityUsdc: 48920000,
         algoFundingRateAnnualizedPercent: 4.82,
-        pqcOracleSeal: 'HYBRID-ED25519-VALID',
+        pqcOracleSeal: 'ORACLE_UNATTESTED_DEMO',
       },
     });
   });

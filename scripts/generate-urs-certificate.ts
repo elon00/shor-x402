@@ -7,7 +7,7 @@
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { sha256 } from '@noble/hashes/sha256';
+import { sha256 } from '@noble/hashes/sha2.js';
 import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js';
 
 console.log('╔══════════════════════════════════════════════════════════════════════════╗');
@@ -31,16 +31,16 @@ function run(cmd: string, title: string) {
 run('node reality-gate.mjs', '[1/5] Running Reality Gate Policy Checker');
 
 // 2. TypeScript compilation
-run('node C:/Users/marti/quantumshield/node_modules/typescript/bin/tsc --noEmit', '[2/5] Running Strict TypeScript Check (tsc --noEmit)');
+run('npx tsc --noEmit', '[2/5] Running Strict TypeScript Check (tsc --noEmit)');
 
 // 3. Official NIST Vectors
-run('node C:/Users/marti/quantumshield/node_modules/tsx/dist/cli.mjs tests/nist-pqc.test.mjs', '[3/5] Running Official NIST & Wycheproof Test Suite');
+run('npx tsx tests/nist-pqc.test.mjs', '[3/5] Running Official NIST & Wycheproof Test Suite');
 
 // 4. Standalone Crypto Audit
 run('node scripts/audit-crypto.mjs', '[4/5] Running Standalone Cryptographic Auditor');
 
 // 5. Universal Reality Engine
-run('node C:/Users/marti/quantumshield/node_modules/tsx/dist/cli.mjs scripts/reality-universal.ts', '[5/5] Running Universal Reality Engine');
+run('npx tsx scripts/reality-universal.ts', '[5/5] Running Universal Reality Engine');
 
 // Generate Deterministic Root Key for Certificate Signing
 const rootSeed = new Uint8Array(32).fill(0x77);

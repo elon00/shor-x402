@@ -1,0 +1,175 @@
+{
+  "reportTitle": "SHOR x402 — TECHNICAL REALITY & REPRODUCIBILITY AUDIT REPORT",
+  "generatedAt": "2026-11-03T21:57:00+05:30",
+  "branch": "repair/antigravity-master-mission-20261103",
+  "commitHash": "e4fca3532b3085d9046d9a33c4fb25b4fa3e107e",
+  "repository": "https://github.com/elon00/shor-x402",
+  "chain": "Algorand MainNet & TestNet",
+  "rulesEnforced": {
+    "noMockSuccessEvidence": true,
+    "testDoublesRestrictedToIsolatedUnitTests": true,
+    "neverClaimLiveSettlementWithoutProof": true,
+    "noFundSpending": true,
+    "failClosedOnMissingInfrastructure": true,
+    "preservePaidSafetyHoldUntilVerified": true
+  },
+  "summary": {
+    "totalGates": 16,
+    "passed": 13,
+    "blocked": 3,
+    "notRun": 0,
+    "failed": 0,
+    "verdict": "LOCAL_AND_POSTGRESQL_ENGINEERING_REMEDIATION_VERIFIED_PRODUCTION_HOLD_ACTIVE"
+  },
+  "gates": [
+    {
+      "id": "GATE_01_TYPESCRIPT_COMPILATION",
+      "name": "Strict TypeScript Compilation",
+      "command": "npm.cmd run lint",
+      "status": "PASS",
+      "exitCode": 0,
+      "details": "tsc --noEmit passed cleanly with 0 diagnostics."
+    },
+    {
+      "id": "GATE_02_PRODUCTION_BUILD",
+      "name": "Production Full-Stack Packaging",
+      "command": "npm.cmd run build:all",
+      "status": "PASS",
+      "exitCode": 0,
+      "details": "Vite client (777 kB) and esbuild server (32 kB) bundled without warnings."
+    },
+    {
+      "id": "GATE_03_NIST_PQC_SUITE",
+      "name": "NIST FIPS 203/204 Post-Quantum Suite",
+      "command": "npm.cmd run test:nist",
+      "status": "PASS",
+      "exitCode": 0,
+      "passedCount": 10,
+      "failedCount": 0,
+      "details": "Pure-TS ML-DSA-65 and ML-KEM-768 wire invariants, KAT, and Wycheproof negative tests passed."
+    },
+    {
+      "id": "GATE_04_CRYPTO_AUDITOR",
+      "name": "Standalone Cryptographic Auditor",
+      "command": "npm.cmd run audit:crypto",
+      "status": "PASS",
+      "exitCode": 0,
+      "passedCount": 23,
+      "failedCount": 0,
+      "details": "23/23 standalone cryptographic assertions passed byte-for-byte."
+    },
+    {
+      "id": "GATE_05_REALITY_TEST_SUITE",
+      "name": "Algorand On-Chain Reality Verification",
+      "command": "node --test tests/reality.test.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "passedCount": 7,
+      "failedCount": 0,
+      "details": "Verified confirmed MainNet transactions RQSQ6L... and 2WPQXH... against live AlgoNode indexers."
+    },
+    {
+      "id": "GATE_06_PAYMENT_CLAIMS_BINDING",
+      "name": "Payment Claim Canonical Hashing & Expiration",
+      "command": "node --test tests/payment-claims.test.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "passedCount": 12,
+      "failedCount": 0,
+      "details": "12/12 negative and deterministic claim matching assertions passed."
+    },
+    {
+      "id": "GATE_07_DURABLE_SETTLEMENT_UNIT",
+      "name": "Durable Settlement Consumption Logic",
+      "command": "node --test tests/durable-settlement.test.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "passedCount": 8,
+      "failedCount": 0,
+      "details": "Single-use ON CONFLICT DO NOTHING semantics verified via labeled test double."
+    },
+    {
+      "id": "GATE_08_FACILITATOR_VERIFIER",
+      "name": "Facilitator Verification Contract Module",
+      "command": "node --test tests/facilitator-verifier.test.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "passedCount": 11,
+      "failedCount": 0,
+      "details": "11/11 negative and positive facilitator proof validation checks passed."
+    },
+    {
+      "id": "GATE_09_PAID_COMPUTATION_ENGINES",
+      "name": "Real Conway & QUBO Computation Engines",
+      "command": "node --test tests/paid-computation.test.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "passedCount": 10,
+      "failedCount": 0,
+      "details": "Deterministic Conway stepping and exact bounded QUBO combinatorial solver verified."
+    },
+    {
+      "id": "GATE_10_PAID_EXECUTION_SECURITY_HOLD",
+      "name": "Fail-Closed Paid Execution Hold",
+      "command": "node --test tests/paid-execution-hold.test.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "passedCount": 2,
+      "failedCount": 0,
+      "details": "server.ts and netlify/functions/shor-execute.ts verified to contain HTTP 503 SECURITY_HOLD."
+    },
+    {
+      "id": "GATE_11_POSTGRES_LIVE_CONCURRENCY",
+      "name": "Live PostgreSQL Concurrent Replay Test",
+      "command": "node --test tests/postgres-live.test.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "passedCount": 1,
+      "failedCount": 0,
+      "details": "Physical Docker PostgreSQL 16 container executed with migrations 001 and 002. 10 concurrent racing workers executed against live pool; exactly 1 won and 9 were rejected. Verified in log shor-db-test-shor-real-db-20261103161144.log (pass 1, fail 0, skipped 0)."
+    },
+    {
+      "id": "GATE_12_UNIVERSAL_REALITY_SYSTEM",
+      "name": "Universal Reality System (URS v1.0) Engine",
+      "command": "npm.cmd run reality:universal",
+      "status": "PASS",
+      "exitCode": 0,
+      "passedCount": 10,
+      "failedCount": 0,
+      "details": "All 10 internal automated reality gates verified."
+    },
+    {
+      "id": "GATE_13_ADVERSARIAL_SECURITY_SUITE",
+      "name": "Adversarial Security & Attack Resistance Regression",
+      "command": "npm.cmd run test:adversarial",
+      "status": "PASS",
+      "exitCode": 0,
+      "passedCount": 15,
+      "failedCount": 0,
+      "details": "15/15 adversarial attack scenarios (replay, tampering, underpayment, concurrency, fail-closed DB) passed."
+    },
+    {
+      "id": "GATE_14_TESTNET_END_TO_END_RELEASE",
+      "name": "Algorand TestNet Staging End-to-End Release",
+      "command": "npm.cmd run testnet:e2e",
+      "status": "BLOCKED",
+      "exitCode": 0,
+      "passedCount": 2,
+      "failedCount": 0,
+      "blockedCount": 4,
+      "details": "Staging wallet readiness [W] and canonical challenge [C] PASSED. Terms [P], [F], [E], and [R] strictly BLOCKED pending an authentic on-chain payment from a distinct authorized client payer. Faucet liquidity transfers and 0-amount opt-ins are strictly rejected. Facilitator verified against https://facilitator.goplausible.xyz under TestNet CAIP-2."
+    },
+    {
+      "id": "GATE_15_MAINNET_PAYMENT_RELEASE",
+      "name": "Algorand MainNet Live Paid Execution Release",
+      "status": "BLOCKED",
+      "details": "Fail-closed hold intentionally preserved. Requires provisioned PostgreSQL instance and user authorization."
+    },
+    {
+      "id": "GATE_16_EXTERNAL_PILOT_ACCEPTANCE",
+      "name": "External Pilot Customer Acceptance",
+      "status": "BLOCKED",
+      "details": "External agent onboarding pending staging deployment and legal compliance sign-off."
+    }
+  ]
+}

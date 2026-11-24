@@ -1,12 +1,14 @@
 import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import crypto from 'node:crypto';
+import { runConway, solveQubo } from '../../src/engines/paid-computation.mjs';
+import { verifyPqcSignature } from '../../src/utils/pqcCrypto.js';
 
 const OFFICIAL_RECIPIENT_ADDRESS = 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM';
-const CAIP2_MAINNET = 'algorand:wGHE2pwdvd7S12BL5Fa+PRx3TF3QXDYODnakNVUtvpU=';
+const CAIP2_MAINNET = 'algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73k';
 const USDC_ASA_MAINNET = 31566704;
 const MINIMUM_REQUIRED_USDC = 0.005;
 const CHALLENGE_TAG = 'x402-global-challenge';
-const FACILITATOR_URL = 'https://x402.goplausible.xyz';
+const FACILITATOR_URL = 'https://facilitator.goplausible.xyz';
 const BAZAAR_DISCOVERY_URL = 'https://shorx402.netlify.app/.well-known/x402-bazaar.json';
 
 const CORS_HEADERS = {
@@ -16,8 +18,10 @@ const CORS_HEADERS = {
   'Access-Control-Expose-Headers': 'WWW-Authenticate, X-402-Payment-Required, X-402-CAIP2, X-402-Cost-USDC, X-402-Asset-ID, X-402-Recipient, X-402-Nonce, X-402-Facilitator, X-402-Challenge-Tag, X-402-PQC-Standard, X-402-Bazaar-Discovery, Link',
 };
 
-// In-Memory Replay Protection Cache for used Transaction IDs
-const USED_TX_CACHE = new Set<string>();
+// Durable Settlement Ledger Integration Note:
+// Cross-instance replay prevention requires PostgreSQL durable settlement (shor_payment_claims table).
+// In-memory process cache acts strictly as an intra-process secondary defense.
+const LOCAL_PROCESS_USED_TX = new Set<string>();
 
 interface OnChainVerificationResult {
   verified: boolean;
@@ -43,7 +47,7 @@ async function verifyAlgorandPaymentOnChain(txId: string, minAmountUsdc: number 
   }
 
   // Prevent Replay Attacks
-  if (USED_TX_CACHE.has(cleanTxId)) {
+  if (LOCAL_PROCESS_USED_TX.has(cleanTxId)) {
     return { verified: false, error: 'Replay Protection: This transaction hash has already been settled and claimed.' };
   }
 
@@ -122,7 +126,7 @@ async function verifyAlgorandPaymentOnChain(txId: string, minAmountUsdc: number 
     }
 
     // Mark as used in replay protection cache
-    USED_TX_CACHE.add(cleanTxId);
+    LOCAL_PROCESS_USED_TX.add(cleanTxId);
 
     return {
       verified: true,
@@ -216,6 +220,19 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     };
   }
 
+  // SECURITY HOLD: Do not consume or accept an existing transfer as a new paid request.
+  // This is a safety gate until an atomic durable claim journal and actual execution
+  // attestation are integrated with the production provider.
+  return {
+    statusCode: 503,
+    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json; charset=utf-8' },
+    body: JSON.stringify({
+      status: 'SECURITY_HOLD',
+      reason: 'Paid execution disabled pending durable replay prevention and authentic execution evidence',
+      charged: false,
+    }),
+  };
+
   // Real On-Chain Payment Verification Check
   const verification = await verifyAlgorandPaymentOnChain(candidateTxId, MINIMUM_REQUIRED_USDC);
 
@@ -252,6 +269,49 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     bodyData = { goal: 'Autonomous post-quantum optimization pipeline.' };
   }
 
+  const userGoal = bodyData.goal || 'Post-Quantum Autonomous Orchestration Objective';
+
+  // Real Input-Derived Conway Computation (deterministic 8x8 seed if not provided)
+  const goalHash = crypto.createHash('sha256').update(userGoal).digest();
+  const defaultGrid = Array.from({ length: 8 }, (_, r) =>
+    Array.from({ length: 8 }, (_, c) => (goalHash[(r * 8 + c) % 32] % 2 === 1 ? 1 : 0))
+  );
+  const inputGrid = Array.isArray(bodyData.conwayGrid) ? bodyData.conwayGrid : defaultGrid;
+  const computedGrid = runConway(inputGrid, 3);
+  let activeCells = 0;
+  for (const row of computedGrid) for (const cell of row) if (cell === 1) activeCells++;
+
+  // Real Bounded QUBO Computation (at most 20 variables, classical exact solver)
+  const defaultQubo = [
+    [-1.2, 0.4, 0.2, 0.1],
+    [0.4, -0.9, 0.3, 0.2],
+    [0.2, 0.3, -1.5, 0.2],
+    [0.1, 0.2, 0.2, -0.7],
+  ];
+  const inputMatrix = Array.isArray(bodyData.quboMatrix) ? bodyData.quboMatrix : defaultQubo;
+  const quboResult = solveQubo(inputMatrix);
+
+  // Real PQC Attestation: Authenticate when supplied; never claim fabricated PQC verification
+  const pqcPub = event.headers['x-pqc-public-key'] || event.headers['X-PQC-Public-Key'] || '';
+  let pqcVerification = {
+    algorithm: 'NIST FIPS 204 (ML-DSA-65)',
+    status: 'NOT_PROVIDED',
+    signatureHex: null as string | null,
+    verified: false,
+    specification: 'No authentic ML-DSA-65 signature provided with request',
+  };
+
+  if (pqcSig && pqcPub) {
+    const pRes = verifyPqcSignature(pqcSig, verification.txId || '', pqcPub, verification.amountUsdc || 0.005);
+    pqcVerification = {
+      algorithm: 'NIST FIPS 204 (ML-DSA-65)',
+      status: pRes.valid ? 'ML_DSA_65_VERIFIED' : 'ML_DSA_65_INVALID',
+      signatureHex: pqcSig,
+      verified: pRes.valid,
+      specification: pRes.valid ? 'Authentic NIST FIPS 204 ML-DSA-65 signature verified' : 'NIST FIPS 204 ML-DSA-65 signature failed verification',
+    };
+  }
+
   // Return Authenticated 200 OK Delivery with Real On-Chain Receipt
   const responsePayload = {
     statusCode: 200,
@@ -259,7 +319,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     service: 'SHOR x402 Post-Quantum Autonomous Agent Orchestrator',
     challengeTag: CHALLENGE_TAG,
     settlementReceipt: {
-      verifiedVia: 'Algorand MainNet Indexer & GoPlausible Facilitator',
+      verifiedVia: 'Algorand MainNet Indexer',
       onChainVerification: 'VERIFIED_ON_CHAIN_MAINNET',
       orchestratorFeeUsdc: verification.amountUsdc,
       settlementAsset: 'USDC',
@@ -273,28 +333,23 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     },
     conwayAutomatonState: {
       finalState: 'S10_COMPLETE',
-      activeCells: 142,
-      shannonEntropy: 0.884,
+      activeCells,
+      gridDimensions: `${computedGrid.length}x${computedGrid[0]?.length || 0}`,
       stateTransitions: [
         'S0_IDLE', 'S1_OBSERVE', 'S2_PLAN', 'S3_DISCOVER', 'S4_EVALUATE',
         'S5_AUTHORIZE', 'S6_PAY', 'S7_EXECUTE', 'S8_VERIFY', 'S10_COMPLETE'
       ],
     },
     quboOptimizationResult: {
-      hamiltonianEnergy: -3.841,
-      selectedService: 'Optimal Post-Quantum Service Cluster',
-      solverMethod: 'Classical QUBO Simulated Annealing (Combinatorial Optimization)',
-      variablesEvaluated: 5,
+      hamiltonianEnergy: quboResult.energy,
+      optimalBits: quboResult.bits,
+      selectedService: 'Optimal Classical QUBO Service Cluster',
+      solverMethod: 'Classical QUBO Combinatorial Optimization (Exhaustive Classical CPU - Not Physical Quantum Hardware)',
+      variablesEvaluated: inputMatrix.length,
     },
-    pqcCryptographicAttestation: {
-      algorithm: 'Hybrid-Ed25519-PQC (NIST FIPS 204 Specification)',
-      status: 'STANDARDIZED_HYBRID_ED25519_VERIFIED',
-      signatureHex: pqcSig || '3a88f1c09b7762d854e1903fa64344e1837b2d5849cf2436894c2538112e4f71a0694e22591e1d35508a287bfba99b24',
-      verified: true,
-      verificationLatencyUs: 28.4,
-    },
+    pqcCryptographicAttestation: pqcVerification,
     executionResult: {
-      objective: bodyData.goal || 'Post-Quantum Autonomous Orchestration Objective',
+      objective: userGoal,
       summary: `Successfully executed autonomous orchestration pipeline. Verified on-chain USDC payment (${verification.amountUsdc} USDC on round ${verification.confirmedRound}) via Algorand MainNet.`,
       timestamp: new Date().toISOString(),
     },

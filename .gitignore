@@ -6,3 +6,8 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Local provider identity and unsigned deployment artifacts
+fleek.config.json
+contracts/algorand/artifacts/
+.web3-checks/

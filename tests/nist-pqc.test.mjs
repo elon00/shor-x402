@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { hkdf } from '@noble/hashes/hkdf.js';
-import { sha256 } from '@noble/hashes/sha256.js';
+import { sha256 } from '@noble/hashes/sha2.js';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem.js';
 import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js';
 import {
@@ -10,7 +10,7 @@ import {
   verifyPqcSignature,
   encapsulateKEM,
   decapsulateKEM
-} from '../src/utils/pqcCrypto.js';
+} from '../src/utils/pqcCrypto.ts';
 
 test('NIST TIER 1: RFC 5869 HKDF-SHA256 Known Answer Verification', () => {
   const ikm = new Uint8Array(22).fill(0x0b);
@@ -83,5 +83,26 @@ test('NIST TIER 8: x402 Dual Hybrid Payment Conjunction', () => {
   const keyPair = generatePqcKeyPair('ML-DSA-65');
   const sig = createPqcHybridSignature('RQSQ6LBTNQEGROLRSKRCJPLVLUD6JOGAVY3QUTDDYGYBBHGAKDSA', keyPair, 0.005, 'srv-shor-orchestrator');
   assert.equal(sig.quantumResistanceScore, 1.0);
-  assert.ok(sig.verificationProof.includes('NIST_FIPS_204_ML_DSA_65_AUTHENTICATED'));
+  // Signing is not equivalent to authentication; assert the complete signature verifies.
+  assert.equal(sig.mlDsaComponent.length, 6618, 'Full 3,309-byte ML-DSA-65 signature required');
+  assert.equal(verifyPqcSignature(sig.hybridSignature, 'RQSQ6LBTNQEGROLRSKRCJPLVLUD6JOGAVY3QUTDDYGYBBHGAKDSA', keyPair.publicKey, 0.005, 'srv-shor-orchestrator').valid, true);
+  assert.equal(verifyPqcSignature(sig.hybridSignature, 'RQSQ6LBTNQEGROLRSKRCJPLVLUD6JOGAVY3QUTDDYGYBBHGAKDSB', keyPair.publicKey, 0.005, 'srv-shor-orchestrator').valid, false);
+});
+
+
+test('SECURITY: forged envelope digest without complete signature must fail', () => {
+  const key = generatePqcKeyPair('ML-DSA-65');
+  const valid = createPqcHybridSignature('tx-sec-1', key, 0.005, 'srv-shor-orchestrator');
+  const pieces = valid.hybridSignature.split('.');
+  assert.equal(verifyPqcSignature(`${pieces[0]}.${pieces[1]}.00`, 'tx-sec-1', key.publicKey).valid, false);
+  assert.equal(verifyPqcSignature(valid.hybridSignature, 'tx-sec-2', key.publicKey).valid, false);
+  assert.equal(verifyPqcSignature(valid.hybridSignature, 'tx-sec-1', key.publicKey).valid, true);
+  const altered = valid.hybridSignature.slice(0, -1) + (valid.hybridSignature.endsWith('0') ? '1' : '0');
+  assert.equal(verifyPqcSignature(altered, 'tx-sec-1', key.publicKey).valid, false);
+});
+
+test('SECURITY: no fabricated Ed25519 component is reported', () => {
+  const key = generatePqcKeyPair('ML-DSA-65');
+  const signature = createPqcHybridSignature('tx-sec-3', key, 0.005, 'srv-shor-orchestrator');
+  assert.equal(signature.ed25519Component, '');
 });

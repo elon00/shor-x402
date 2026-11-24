@@ -41,6 +41,12 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/api/v1/storage/receipts"
+  to = "/.netlify/functions/store-receipt"
+  status = 200
+  force = true
+
 # 6. Fallback for any other API functions
 [[redirects]]
   from = "/api/*"

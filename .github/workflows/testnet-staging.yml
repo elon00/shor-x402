@@ -1,0 +1,46 @@
+name: Algorand TestNet Staging Verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      runLiveDbTest:
+        description: 'Run live PostgreSQL integration test (requires STAGING_DATABASE_URL)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  testnet-preflight:
+    name: Algorand TestNet Staging Preflight & Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: TypeScript Lint
+        run: npm run lint
+
+      - name: Adversarial Security Suite
+        run: npm run test:adversarial
+
+      - name: NIST FIPS 203/204 Post-Quantum Suite
+        run: npm run test:nist
+
+      - name: Algorand TestNet Staging Preflight
+        run: npm run testnet:preflight
+
+      - name: Live Staging PostgreSQL Concurrency Test (Optional)
+        if: ${{ inputs.runLiveDbTest && secrets.STAGING_DATABASE_URL != '' }}
+        run: npm test
+        env:
+          SHOR_TEST_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}

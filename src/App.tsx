@@ -33,8 +33,7 @@ import { solveServiceSelection } from './utils/quboSolver';
 import { executeX402ServiceRequest } from './services/apiClient';
 import { fetchLiveAlgodStatus, fetchLiveAccountHolding } from './services/algorandClient';
 import {
-  connectLuteOrAlgorandWallet,
-  DEFAULT_ALGORAND_ADDRESSES,
+  WalletController,
   getSavedLutePublicKey,
 } from './services/walletConnector';
 
@@ -43,7 +42,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>('agent-hub');
   const [isDocsOpen, setIsDocsOpen] = useState<boolean>(false);
   const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
-  const [walletProviderName, setWalletProviderName] = useState<string>('Lute Wallet');
+  const [walletProviderName, setWalletProviderName] = useState<string>('Disconnected');
 
   // Post-Quantum Keypair
   const [pqcKey, setPqcKey] = useState<PqcKeyPair>(() => generatePqcKeyPair('ML-DSA-65'));
@@ -52,18 +51,38 @@ export default function App() {
   const [wallet, setWallet] = useState<WalletState>(() => {
     const savedLute = getSavedLutePublicKey();
     return {
-      address: savedLute || DEFAULT_ALGORAND_ADDRESSES.mainnet,
-      algoBalance: 21.231434,
-      usdcBalance: 5.0,
-      network: 'algorand-mainnet',
+      address: savedLute || '',
+      sessionStatus: savedLute ? 'watching' : 'disconnected',
+      balanceStatus: 'unknown',
+      ownershipProven: false,
+      algoBalance: 0,
+      usdcBalance: 0,
+      network: 'algorand-testnet',
       pqcKeyId: pqcKey.keyId,
-      providerName: 'Lute Wallet',
+      providerName: savedLute ? 'Watch-only address' : 'Disconnected',
       isCustomLuteKey: !!savedLute,
     };
   });
 
+  const walletController = useRef<WalletController | null>(null);
+  useEffect(() => {
+    let active = true;
+    const controller = new WalletController('algorand-testnet', session => {
+      if (!active) return;
+      setWallet(w => ({ ...w, address: session.address, network: session.network,
+        sessionStatus: session.status, sessionMessage: session.message,
+        ownershipProven: false, balanceStatus: 'unknown', algoBalance: 0, usdcBalance: 0,
+        providerName: session.status === 'connected' ? 'Pera' : session.status === 'watching' ? 'Watch-only address' : 'Disconnected' }));
+      setWalletProviderName(session.status === 'connected' ? 'Pera' : session.status === 'watching' ? 'Watch-only address' : 'Disconnected');
+    });
+    walletController.current = controller;
+    const saved = getSavedLutePublicKey();
+    if (saved) controller.watch(saved);
+    return () => { active = false; void controller.disconnect(); walletController.current = null; };
+  }, []);
+
   // Algorand Network & Round
-  const [activeRound, setActiveRound] = useState<number>(64447633);
+  const [activeRound, setActiveRound] = useState<number>(0);
 
   // Live Algorand MainNet Poller (Round & On-Chain Balance Sync)
   useEffect(() => {
@@ -72,21 +91,24 @@ export default function App() {
       try {
         const [nodeStatus, accountInfo] = await Promise.all([
           fetchLiveAlgodStatus(wallet.network),
-          fetchLiveAccountHolding(wallet.address, wallet.network),
+          wallet.address ? fetchLiveAccountHolding(wallet.address, wallet.network) : Promise.resolve(null),
         ]);
         if (!isMounted) return;
         if (nodeStatus && nodeStatus.lastRound) {
           setActiveRound(nodeStatus.lastRound);
         }
-        if (accountInfo && accountInfo.algoBalance > 0) {
+        if (accountInfo) {
           setWallet((w) => ({
             ...w,
             algoBalance: accountInfo.algoBalance,
-            usdcBalance: accountInfo.hasUsdcOptIn ? accountInfo.usdcBalance : w.usdcBalance,
+            usdcBalance: accountInfo.usdcBalance,
+            balanceStatus: 'fresh',
           }));
+        } else if (wallet.address) {
+          setWallet(w => ({ ...w, balanceStatus: 'unavailable', algoBalance: 0, usdcBalance: 0 }));
         }
       } catch (e) {
-        // Silent fallback
+        // Leave unavailable balances unchanged
       }
     };
 
@@ -110,7 +132,8 @@ export default function App() {
         }
       } catch (err) {
         if (isMounted) {
-          setActiveRound((r) => r + 1);
+          setActiveRound(0);
+          setIsNodeLive(false);
         }
       }
     };
@@ -140,7 +163,7 @@ export default function App() {
     maxPerRequestUsdc: 0.06,
     maxPerTaskUsdc: 0.15,
     dailyBudgetUsdc: 2.5,
-    dailySpentUsdc: 0.024,
+    dailySpentUsdc: 0,
     maxRiskThreshold: 0.35,
     pqcMinimumScore: 0.8,
     requireHumanApprovalAboveUsdc: 0.03,
@@ -150,38 +173,7 @@ export default function App() {
   });
 
   // Transaction Ledger
-  const [transactions, setTransactions] = useState<AlgorandTransaction[]>([
-    {
-      txId: '6VNXDKZINXDVJ3QU4ZA222GLT7PL74TSG6YHPBGMJJPBSYZS53WA',
-      sender: 'QYXDGS2XJJT7QNR6EJ2YHNZFONU6ROFM6BKTBNVT63ZXQ5OC6IYSPNDJ4U',
-      receiver: 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM',
-      asset: 'ALGO',
-      amount: 21.231434,
-      feeAlgo: 0.002,
-      confirmedRound: 64447633,
-      timestamp: new Date().toISOString(),
-      note: 'x402:mainnet-funding-activation:x402-global-challenge',
-      pqcSignature: 'ML-DSA-65-SIGNATURE-VERIFIED.FIPS204',
-      status: 'confirmed',
-      serviceName: 'MainNet Account Activation & Gas Funding',
-      x402ProofToken: 'x402_proof_6VNXDKZINXDVJ3QU4ZA222GLT7PL74TSG6YHPBGMJJPBSYZS53WA',
-    },
-    {
-      txId: 'TX_INITIAL_ORBITAL_SEED_888999AAA111BBB222CCC333DDD444EEE',
-      sender: 'TPLMGGFNG64LKOCKVB7ZMQH5AMSNMV4GLI7GCH4FY2XQEKSIGB77O6LCFM',
-      receiver: 'WEATHR7QW8V9E3LK2X64MPN56YZAQ1B2C3D4E5F6G7H8J9K0L1M2N3P4Q5',
-      asset: 'USDC',
-      amount: 0.002,
-      feeAlgo: 0.001,
-      confirmedRound: 42891010,
-      timestamp: new Date(Date.now() - 360000).toISOString(),
-      note: 'x402:init-seed-bootstrap',
-      pqcSignature: 'SHOR-HYBRID-V1.ed25519_sig_init.mldsa65_sig_lattice_777',
-      status: 'confirmed',
-      serviceName: 'Planetary Radar & Hyperlocal Weather API',
-      x402ProofToken: 'x402_proof_initial_42891010',
-    },
-  ]);
+  const [transactions, setTransactions] = useState<AlgorandTransaction[]>([]);
 
   // Agent State & Execution
   const [agentState, setAgentState] = useState<AgentStateId>('S0_IDLE');
@@ -193,7 +185,7 @@ export default function App() {
     {
       time: new Date().toLocaleTimeString(),
       state: 'S0_IDLE',
-      message: 'SHOR Autonomous Economic Agent initialized on Algorand MainNet with NIST FIPS 204 ML-DSA-65 security.',
+      message: 'SHOR initialized on TestNet. Connect a wallet or view a public address. Paid execution remains disabled.',
       type: 'success',
     },
   ]);
@@ -223,56 +215,28 @@ export default function App() {
   };
 
   const handleConnectWallet = async () => {
-    try {
-      const info = await connectLuteOrAlgorandWallet(wallet.network);
-      setWallet((w) => ({
-        ...w,
-        address: info.address,
-        algoBalance: info.algoBalance,
-        usdcBalance: info.usdcBalance,
-        providerName: info.providerName,
-        isCustomLuteKey: info.isCustomKey,
-      }));
-      setWalletProviderName(info.providerName);
-      addLog('S0_IDLE', `Connected: ${info.providerName} (${info.address.substring(0, 8)}... on ${wallet.network}).`, 'algo');
-    } catch (e: any) {
-      addLog('S0_IDLE', `Wallet connection status: ${e.message}`, 'info');
-    }
+    await walletController.current?.connect();
+    const state = walletController.current?.state;
+    if (state) addLog('S0_IDLE', state.message, state.status === 'connected' ? 'algo' : 'info');
   };
-
-  const handleUpdateCustomAddress = (newAddress: string) => {
-    setWallet((w) => ({
-      ...w,
-      address: newAddress,
-      isCustomLuteKey: true,
-      providerName: 'Lute Wallet',
-    }));
-    setWalletProviderName('Lute Wallet');
-    addLog('S0_IDLE', `Lute Wallet Public Key updated to ${newAddress.substring(0, 8)}...`, 'success');
+  const handleDisconnectWallet = () => { void walletController.current?.disconnect(); };
+  const handleUpdateCustomAddress = async (address: string) => {
+    const controller = walletController.current;
+    if (!controller) return;
+    await controller.disconnect();
+    controller.watch(address);
+    addLog('S0_IDLE', 'Viewing a public address. Wallet signing is not connected.', 'info');
   };
-
   const handleFaucetClaim = () => {
-    setWallet((w) => ({
-      ...w,
-      algoBalance: w.algoBalance + 5.0,
-      usdcBalance: w.usdcBalance + 0.5,
-    }));
-    addLog('S0_IDLE', 'Claimed 0.50 USDC and 5.00 ALGO test assets into Agent Wallet.', 'algo');
+    if (wallet.network !== 'algorand-testnet') {
+      addLog('S0_IDLE', 'The faucet is available only on TestNet.', 'warn'); return;
+    }
+    window.open('https://lora.algokit.io/testnet/fund', '_blank', 'noopener,noreferrer');
   };
-
   const handleNetworkChange = (net: NetworkMode) => {
-    setWallet((w) => {
-      const isCustom = w.isCustomLuteKey;
-      const newAddr = isCustom
-        ? w.address
-        : (net === 'algorand-mainnet' ? DEFAULT_ALGORAND_ADDRESSES.mainnet : DEFAULT_ALGORAND_ADDRESSES.testnet);
-      return {
-        ...w,
-        network: net,
-        address: newAddr,
-      };
-    });
-    addLog('S0_IDLE', `Switched blockchain settlement target to ${net}.`, 'info');
+    if (net !== 'algorand-testnet' && net !== 'algorand-mainnet') return;
+    void walletController.current?.changeNetwork(net);
+    addLog('S0_IDLE', 'Reconnect the wallet on the selected network.', 'info');
   };
 
   // Autonomous Execution Pipeline
@@ -540,6 +504,7 @@ export default function App() {
         onOpenDocs={() => setIsDocsOpen(true)}
         activeRound={activeRound}
         onConnectWallet={handleConnectWallet}
+        onDisconnectWallet={handleDisconnectWallet}
         onUpdateCustomAddress={handleUpdateCustomAddress}
         walletProviderName={walletProviderName}
       />

@@ -1,103 +1,51 @@
-/**
- * Algorand Live Node & Indexer Client for SHOR x402
- * Connects to AlgoNode Free Public Infrastructure for MainNet and TestNet.
- */
-import { NetworkMode } from '../types';
-
+import type { NetworkMode } from '../types';
+import { NETWORKS } from '../config/networks.mjs';
+import { isValidAddress } from 'algosdk';
 export interface AlgodNodeStatus {
-  lastRound: number;
-  timeSinceLastRound: number;
-  catchupTime: number;
-  genesisId: string;
-  genesisHash: string;
-  isLive: boolean;
-  network: NetworkMode;
+  lastRound: number; timeSinceLastRound: number; catchupTime: number;
+  genesisId: string; genesisHash: string; isLive: boolean; network: NetworkMode;
 }
-
 export interface AccountHolding {
-  address: string;
-  algoMicroAlgos: number;
-  algoBalance: number;
-  usdcBalance: number;
-  hasUsdcOptIn: boolean;
-  round: number;
+  address: string; algoMicroAlgos: number; algoBalance: number;
+  usdcBalance: number; hasUsdcOptIn: boolean; round: number;
 }
-
-const MAINNET_ALGOD_URL = 'https://mainnet-api.algonode.cloud';
-const TESTNET_ALGOD_URL = 'https://testnet-api.algonode.cloud';
-
+async function getJson(url: string) {
+  const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(12000) });
+  if (!response.ok) throw new Error('Node request failed');
+  return response.json();
+}
 export async function fetchLiveAlgodStatus(network: NetworkMode): Promise<AlgodNodeStatus> {
-  const baseUrl = network === 'algorand-mainnet' ? MAINNET_ALGOD_URL : TESTNET_ALGOD_URL;
-
   try {
-    const res = await fetch(`${baseUrl}/v2/status`, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' },
-    });
-
-    if (!res.ok) {
-      throw new Error(`Algod status returned ${res.status}`);
-    }
-
-    const data = await res.json();
-    return {
-      lastRound: data['last-round'] || 42891042,
-      timeSinceLastRound: data['time-since-last-round'] || 3,
-      catchupTime: data['catchup-time'] || 0,
-      genesisId: data['genesis-id'] || (network === 'algorand-mainnet' ? 'mainnet-v1.0' : 'testnet-v1.0'),
-      genesisHash: data['genesis-hash'] || 'wGHE2pwdvd7S12BL5Fa+PRx3TF3QXDYODnakNVUtvpU=',
-      isLive: true,
-      network,
-    };
-  } catch (err) {
-    // Fallback if offline or local
-    return {
-      lastRound: 42891042 + Math.floor((Date.now() - 1700000000000) / 3300),
-      timeSinceLastRound: 3,
-      catchupTime: 0,
-      genesisId: network === 'algorand-mainnet' ? 'mainnet-v1.0' : 'testnet-v1.0',
-      genesisHash: 'wGHE2pwdvd7S12BL5Fa+PRx3TF3QXDYODnakNVUtvpU=',
-      isLive: false,
-      network,
-    };
+    const config = NETWORKS[network];
+    if (!config) throw new Error('Unsupported network');
+    const [status, params] = await Promise.all([
+      getJson(config.algod + '/v2/status'), getJson(config.algod + '/v2/transactions/params') ]);
+    if (params['genesis-hash'] !== config.genesisHash || params['genesis-id'] !== config.genesisId ||
+        !Number.isSafeInteger(status['last-round']) || status['last-round'] <= 0) throw new Error('Wrong or unavailable network');
+    return { lastRound: status['last-round'], timeSinceLastRound: status['time-since-last-round'] || 0,
+      catchupTime: status['catchup-time'] || 0, genesisId: params['genesis-id'],
+      genesisHash: params['genesis-hash'], isLive: true, network };
+  } catch {
+    return { lastRound: 0, timeSinceLastRound: 0, catchupTime: 0,
+      genesisId: '', genesisHash: '', isLive: false, network };
   }
 }
-
-export async function fetchLiveAccountHolding(address: string, network: NetworkMode = 'algorand-mainnet'): Promise<AccountHolding | null> {
-  const baseUrl = network === 'algorand-mainnet' ? MAINNET_ALGOD_URL : TESTNET_ALGOD_URL;
+export async function fetchLiveAccountHolding(address: string, network: NetworkMode = 'algorand-testnet'): Promise<AccountHolding | null> {
+  if (!isValidAddress(address) || !NETWORKS[network]) return null;
   try {
-    const res = await fetch(`${baseUrl}/v2/accounts/${address}`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    const algoBalance = (data.amount || 0) / 1000000;
-    const usdcAssetId = network === 'algorand-mainnet' ? 31566704 : 10458941;
-    const usdcAsset = (data.assets || []).find((a: any) => a['asset-id'] === usdcAssetId);
-    const usdcBalance = usdcAsset ? (usdcAsset.amount || 0) / 1000000 : 0;
-    const hasUsdcOptIn = !!usdcAsset;
-
-    return {
-      address,
-      algoMicroAlgos: data.amount || 0,
-      algoBalance,
-      usdcBalance,
-      hasUsdcOptIn,
-      round: data.round || 64447633,
-    };
-  } catch (e) {
-    return null;
-  }
+    const data = await getJson(NETWORKS[network].algod + '/v2/accounts/' + address);
+    if (data?.address !== address || !Number.isSafeInteger(data.amount) || data.amount < 0 ||
+        !Number.isSafeInteger(data.round) || data.round <= 0) return null;
+    const holding = (data.assets || []).find((asset: any) => asset['asset-id'] === NETWORKS[network].assetId);
+    const microUsdc = holding?.amount ?? 0;
+    if (!Number.isSafeInteger(microUsdc) || microUsdc < 0) return null;
+    return { address, algoMicroAlgos: data.amount, algoBalance: data.amount / 1e6,
+      usdcBalance: microUsdc / 1e6, hasUsdcOptIn: !!holding, round: data.round };
+  } catch { return null; }
 }
-
 export function getExplorerTxUrl(txId: string, network: NetworkMode): string {
-  if (network === 'algorand-mainnet') {
-    return `https://allo.info/tx/${txId}`;
-  }
-  return `https://testnet.allo.info/tx/${txId}`;
+  return (network === 'algorand-mainnet' ? 'https://allo.info/tx/' : 'https://testnet.allo.info/tx/') + encodeURIComponent(txId);
 }
-
 export function getExplorerAccountUrl(address: string, network: NetworkMode): string {
-  if (network === 'algorand-mainnet') {
-    return `https://allo.info/account/${address}`;
-  }
-  return `https://testnet.allo.info/account/${address}`;
+  return (network === 'algorand-mainnet' ? 'https://allo.info/account/' : 'https://testnet.allo.info/account/') + encodeURIComponent(address);
 }

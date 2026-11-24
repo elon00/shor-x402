@@ -362,21 +362,39 @@ export const ServiceMarketplaceView: React.FC<ServiceMarketplaceViewProps> = ({
 
                 {/* Orchestrator Result Box */}
                 {orchestratorResult && (
-                  <div className="p-3.5 bg-emerald-950/30 border border-emerald-800/50 rounded-xl space-y-2 animate-in fade-in duration-200">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-emerald-400 font-mono flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4" /> 200 OK — Orchestrator Delivery Verified!
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        Round #{orchestratorResult.payload?.settlementReceipt?.confirmedRound || 64447633}
-                      </span>
+                  orchestratorResult.payload?.status === 'SECURITY_HOLD' ? (
+                    <div className="p-3.5 bg-amber-950/40 border border-amber-600/60 rounded-xl space-y-2 animate-in fade-in duration-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-amber-400 font-mono flex items-center gap-1.5">
+                          <AlertTriangle className="w-4 h-4 text-amber-400" /> 503 SECURITY HOLD — Fail-Closed Hold Active
+                        </span>
+                        <span className="text-[10px] text-amber-300 font-mono px-2 py-0.5 rounded bg-amber-900/50 border border-amber-700">
+                          HOLD ACTIVE
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-300 font-mono space-y-1">
+                        <p><strong>Status:</strong> <span className="text-amber-300">SECURITY_HOLD</span></p>
+                        <p><strong>Reason:</strong> <span className="text-slate-200">{orchestratorResult.payload?.reason}</span></p>
+                        <p className="text-[10px] text-slate-400 mt-1">Paid execution remains blocked until durable settlement challenge binding is verified on-chain.</p>
+                      </div>
                     </div>
-                    <div className="text-[11px] text-slate-300 font-mono space-y-1">
-                      <p><strong>Transaction ID:</strong> <span className="text-cyan-300">{orchestratorResult.transaction?.txId}</span></p>
-                      <p><strong>PQC Attestation:</strong> <span className="text-indigo-300">NIST FIPS 204 ML-DSA-65 (Verified)</span></p>
-                      <p><strong>Summary:</strong> <span className="text-slate-300">{orchestratorResult.payload?.executionResult?.summary}</span></p>
+                  ) : (
+                    <div className="p-3.5 bg-emerald-950/30 border border-emerald-800/50 rounded-xl space-y-2 animate-in fade-in duration-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-emerald-400 font-mono flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4" /> 200 OK — Orchestrator Delivery Verified!
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          Round #{orchestratorResult.payload?.settlementReceipt?.confirmedRound || 64447633}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-300 font-mono space-y-1">
+                        <p><strong>Transaction ID:</strong> <span className="text-cyan-300">{orchestratorResult.transaction?.txId}</span></p>
+                        <p><strong>PQC Attestation:</strong> <span className="text-indigo-300">NIST FIPS 204 ML-DSA-65 (Verified)</span></p>
+                        <p><strong>Summary:</strong> <span className="text-slate-300">{orchestratorResult.payload?.executionResult?.summary}</span></p>
+                      </div>
                     </div>
-                  </div>
+                  )
                 )}
               </div>
             </div>
