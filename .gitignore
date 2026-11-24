@@ -11,3 +11,6 @@ coverage/
 fleek.config.json
 contracts/algorand/artifacts/
 .web3-checks/
+
+# Lean 4 build artifacts
+lean_verify/.lake/
